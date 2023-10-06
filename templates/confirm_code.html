@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Confirm Code</h1>
+  <form method="POST" action="{{ url_for('confirm') }}">
+    <div class="form-group">
+      <label for="code">Enter 6-digit Code:</label>
+      <input type="text" class="form-control" id="code" name="code" pattern="\d{6}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+{% endblock %}

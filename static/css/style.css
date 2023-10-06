@@ -1,0 +1,112 @@
+/* style.css */
+
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    margin-top: 20px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button[type="submit"] {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Add styles for flashed messages */
+.messages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.messages li {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  color: #333;
+  border-radius: 4px;
+}
+
+.messages.success li {
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+  color: #3c763d;
+}
+
+.messages.error li {
+  background-color: #f2dede;
+  border-color: #ebccd1;
+  color: #a94442;
+}
+
+.messages.warning li {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
+}
+
+.messages.info li {
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  color: #31708f;
+}
+
+/* Add styles for header menu */
+/* Add styles for header menu and body */
+body {
+  font-family: 'Roboto', sans-serif; /* Change the font to a nicer one if desired */
+  background-color: #ccc; /* Set a softer background color */
+}
+
+.navbar {
+  background-color: #c55; /* Set the header background color */
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+  color: #fff;
+  font-weight: bold; /* Make the text bold */
+}
+
+.navbar-nav .nav-link {
+  padding: 10px 15px;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: #0056b3; /* Change the hover color */
+}
+
+.navbar-brand {
+  font-size: 28px; /* Increase the font size */
+}
+
+.navbar-toggler-icon {
+  color: #fff;
+}
+
+.navbar-toggler {
+  border: none;
+}
