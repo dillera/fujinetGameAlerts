@@ -1,9 +1,8 @@
-#
-# custom.js for FujiNet Game Alert System
-# dillera 10/23 
 
 
-document.getElementById('whatsapp_number').addEventListener('onblur', function() {
+console.log
+
+document.getElementById('whatsapp_number').addEventListener('blur', function() {
     var inputElement = document.getElementById('whatsapp_number');
     var phoneNumber = inputElement.value;
 
@@ -15,9 +14,6 @@ document.getElementById('whatsapp_number').addEventListener('onblur', function()
         }
     }
 });
-
-
-
 
 
 function validatePhoneNumber() {

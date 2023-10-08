@@ -3,7 +3,56 @@
 {% block content %}
   <h1>Welcome to the Dashboard</h1>
 
-  <h2>Events</h2>
+
+  <form id="optInForm">
+    <input type="hidden" name="phone" id="phone" value="{{ phone_number }}">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="opt_in" id="opt_in" {% if opt_in_status == 1 %}checked{% endif %}>
+      <label class="form-check-label" for="optInRadio">
+        Receive alert messages from FujiNet Game System
+      </label>
+    </div>
+  </form>
+  
+  <script>
+    var phone = "{{ phone_number }}";
+    document.getElementById('optInForm').addEventListener('change', function() {
+      var optInStatus = document.getElementById('opt_in').checked ? 1 : 0;
+      updateOptIn(optInStatus);
+    });
+    
+    function updateOptIn(optInStatus) {
+      // Send a request to your Flask route to update the opt-in status
+      fetch('/update_opt_in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        
+
+//        body: JSON.stringify({'opt_in_status': optInStatus})
+//        console.log(optInStatus);
+//        console.log(phone});
+
+        body: JSON.stringify({
+            'opt_in_status': optInStatus,
+            'phone': phone
+        })
+ 
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Opt-In status updated successfully!');
+        } else {
+          alert('Failed to update Opt-In status. Please report this.');
+        }
+      });
+    }
+  </script>
+
+   <h2>Events</h2>
   <table class="table">
     <thead>
       <tr>
@@ -24,6 +73,5 @@
       {% endfor %}
     </tbody>
   </table>
+
 {% endblock %}
-
-

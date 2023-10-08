@@ -5,6 +5,7 @@
   <form method="POST">
     {{ phone_form.hidden_tag() }}
     <div class="form-group">
+     
       {{ phone_form.phone_number.label }}
       {{ phone_form.phone_number(id="phone_number", class="form-control", onblur="validatePhoneNumber()") }}
     </div>
@@ -17,6 +18,7 @@
   <form method="POST">
     {{ whatsapp_form.hidden_tag() }}
     <div class="form-group">
+    
       {{ whatsapp_form.whatsapp_number.label }}
       {{ whatsapp_form.whatsapp_number(id="whatsapp_number", class="form-control", onblur="validateWhatsAppNumber()") }}
     </div>

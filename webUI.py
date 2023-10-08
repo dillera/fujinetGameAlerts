@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
@@ -7,7 +8,15 @@ import random,os, logging, sqlite3
 from twilio.base.exceptions import TwilioRestException
 
 app = Flask(__name__)
+
+# Setup Logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(levelname)s] - %(message)s',
+                    handlers=[logging.StreamHandler()])
+
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random string
+csrf = CSRFProtect(app)
+
 # Twilio credentials
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
@@ -18,7 +27,8 @@ phone_number = '+12673532203'
 # Create SQLite3 database connection
 conn = sqlite3.connect('users.db')
 cursor = conn.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, phone_number TEXT, code TEXT, name TEXT, confirmed INTEGER)')
+cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, phone_number TEXT, code TEXT, name TEXT, confirmed INTEGER, opt_in INTEGER)')
+logging.info(f"> >> creating connection to users.db")
 conn.commit()
 conn.close()
 
@@ -27,14 +37,10 @@ conn.close()
 conn_events = sqlite3.connect('events.db')
 cursor_events = conn_events.cursor()
 cursor_events.execute('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, date TEXT, time TEXT, game_name TEXT, number_of_players INTEGER)')
+logging.info(f"> >> creating connection to  events.db")
 conn_events.commit()
 conn_events.close()
 
-
-# Setup Logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s [%(levelname)s] - %(message)s',
-                    handlers=[logging.StreamHandler()])
 
 
 ###################################################
@@ -91,6 +97,24 @@ def send_twilio_message(body, from_, to):
         return None
 
 
+def get_opt_in_status_from_db(phone_number):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    # Execute a query to retrieve the opt_in status for the given phone number
+    cursor.execute('SELECT opt_in FROM users WHERE phone_number=?', (phone_number,))
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        return result[0]  # Assuming the result is a single value, return it
+    else:
+        return None  # Return None if no result was found for the given phone number
+
+
+
+
 ###################################################
 ###################################################
 # Routes
@@ -116,9 +140,11 @@ def index():
 
             if user:
                 # User is here, already confirmed so show them the dashboard page
+                # pass along the phone number so we can use it to determine opt_in
                 if user[4] == 1:  # User is already confirmed
                     logging.info(f"> found in db and confirmed:  {user}")
-                    return redirect(url_for('dashboard'))
+                    return redirect(url_for('dashboard', phone_number=phone_number))
+                    #return redirect(url_for('dashboard'))
 
                 # they are in the db but not confirmed send them a new code....
                 else:
@@ -193,26 +219,37 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    conn_users = sqlite3.connect('users.db')
-    cursor_users = conn_users.cursor()
 
-    cleaned_phone = clean_phone(phone_number)
+    # if we were called from / then we have the phone_number already
+    phone_number = request.args.get('phone_number')
+    #opt_in_status = get_opt_in_status_from_db(phone_number)
+
+
+    # I don't know why but phone_number is +1 format here for some reason
+    # clean it so that there is a match in the DB
+    #cleaned_phone = clean_phone(phone_number)
 
 
     # Check if the user is in the USERS database and confirmed
     # We should check again in case someone just clicked on the Menu Navbar
-    cursor_users.execute('SELECT * FROM users WHERE phone_number=? AND confirmed=1', (cleaned_phone,))
+    conn_users = sqlite3.connect('users.db')
+    cursor_users = conn_users.cursor()
+    cursor_users.execute('SELECT * FROM users WHERE phone_number=? AND confirmed=1', (phone_number,))
     user = cursor_users.fetchone()
     logging.info(f">in /dashboard for phone: {phone_number}")
-    logging.info(f">in /dashboard for phone: {cleaned_phone}")
+ #   logging.info(f">in /dashboard for phone: {cleaned_phone}")
+
 
 
     if user:
+        opt_in_status = user[5]  # Assuming `opt_in` is the 6th column in your users table
+
         logging.info(f">in /dashboard found a user....")
         logging.info(f">> user[1] = {user[1]}")
         logging.info(f">> user[2] = {user[2]}")
         logging.info(f">> user[3] = {user[3]}")
         logging.info(f">> user[4] = {user[4]}")
+        logging.info(f">> user[5] = {user[5]}")
 
         # Fetch events from events.db
         conn_events = sqlite3.connect('events.db')
@@ -222,7 +259,12 @@ def dashboard():
         events = cursor_events.fetchall()
         conn_events.close()
         
-        return render_template('dashboard.html', events=events)
+        # set the opt_in stats
+        opt_in_status = user[5]
+
+        #return render_template('dashboard.html', events=events, phone_number=cleaned_phone, opt_in=opt_in_status)
+        return render_template('dashboard.html', events=events, phone_number=phone_number)
+
 
     else:
         flash('Invalid user not found in DB.')
@@ -230,6 +272,31 @@ def dashboard():
     flash('Something bad - > Welcome to the Dashboard Page.')
     conn_users.close()
     return redirect(url_for('index'))
+
+
+@app.route('/update_opt_in', methods=['POST'])
+def update_opt_in():
+    logging.info(f">in update_opt_in going to update opt-in status....")
+    logging.info(f"Received request: {request.json}")
+ 
+    try:
+
+        opt_in_status = request.json.get('opt_in_status')
+        phone         = request.json.get('phone')
+
+        logging.info(f"Received request to update opt_in_status to {opt_in_status} for phone {phone}")
+
+        # Update the database with the new opt_in_status value
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET opt_in=? WHERE phone_number=?', (opt_in_status, phone))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logging.error(f"Error updating opt-in status: {str(e)}")
+        return jsonify({'success': False}), 500
 
 
 
@@ -272,12 +339,19 @@ def confirm():
 
 @app.route('/confirm_code', methods=['GET', 'POST'])
 def confirm_code():
-    logging.info(f">in /confirm_code route, calling confirm_code.html for code:{code}")
+    logging.info(f">in /confirm_code route, calling confirm_code.html for code")
     return render_template('confirm_code.html')
 
 ######################################################################################################
 ######################################################################################################
 ######################################################################################################
+
+# Route to serve favicon.ico
+@app.route('/favicon.ico')
+def favicon():
+    logging.info(f">looking for favicon")
+    return send_from_directory(app.root_path, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 
 if __name__ == '__main__':
