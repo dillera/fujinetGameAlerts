@@ -2,12 +2,28 @@
 
 {% block content %}
   <h1>Enter your Phone Number</h1>
-   <form method="POST">
-    {{ form.hidden_tag() }}
+  <form method="POST">
+    {{ phone_form.hidden_tag() }}
     <div class="form-group">
-      {{ form.phone_number.label }}
-      {{ form.phone_number(class="form-control") }}
+      {{ phone_form.phone_number.label }}
+      {{ phone_form.phone_number(id="phone_number", class="form-control", onblur="validatePhoneNumber()") }}
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
+
+  <hr>
+
+  <h1>WhatsApp Registration</h1>
+  <form method="POST">
+    {{ whatsapp_form.hidden_tag() }}
+    <div class="form-group">
+      {{ whatsapp_form.whatsapp_number.label }}
+      {{ whatsapp_form.whatsapp_number(id="whatsapp_number", class="form-control", onblur="validateWhatsAppNumber()") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit WhatsApp Registration</button>
+  </form>
+
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
 {% endblock %}
+

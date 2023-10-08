@@ -4,6 +4,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
 import random,os, logging, sqlite3
+from twilio.base.exceptions import TwilioRestException
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random string
@@ -40,10 +41,16 @@ logging.basicConfig(level=logging.INFO,
 
 class PhoneNumberForm(FlaskForm):
     phone_number = StringField('Phone Number (e.g., 555-555-5555)', validators=[
-        DataRequired(),
-        Regexp(r'^\d{3}-\d{3}-\d{4}$', message='Phone number must be in the format 555-555-5555')
+        DataRequired()
     ])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Submit US Number for SMS')
+
+class WhatsAppRegistrationForm(FlaskForm):
+    whatsapp_number = StringField('WhatsApp Number (e.g., +123 456 7890)', validators=[
+        DataRequired()
+    ])
+    submit_whatsapp = SubmitField('Submit WhatsApp Registration')
+
 
 
 def generate_random_code():
@@ -71,6 +78,18 @@ def clean_phone(phone_number):
         return None  # Invalid phone number format
 
 
+def send_twilio_message(body, from_, to):
+    try:
+        message = client.messages.create(
+            body=body,
+            from_=from_,
+            to=to
+        )
+        return message.sid
+    except TwilioRestException as e:
+        flash(f'Twilio Error: {e.msg}', 'error')
+        return None
+
 
 ###################################################
 ###################################################
@@ -81,54 +100,96 @@ def clean_phone(phone_number):
 @app.route('/', methods=['GET', 'POST'])
 def index():
 
-    form = PhoneNumberForm()
-    if form.validate_on_submit():
-        phone_number = form.phone_number.data
+    phone_form = PhoneNumberForm()
+    whatsapp_form = WhatsAppRegistrationForm()
 
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE phone_number=?', (phone_number,))
-        user = cursor.fetchone()
+    if request.method == 'POST':
 
-        if user:
 
-            # User is here, already confirmed so show them the dashboard page
-            if user[4] == 1:  # User is already confirmed
-                logging.info(f"> found in db and confirmed:  {user}")
-                return redirect(url_for('dashboard'))
+        if phone_form.validate_on_submit():
+            phone_number = phone_form.phone_number.data
 
-            # they are in the db but not confirmed send them a new code....
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE phone_number=?', (phone_number,))
+            user = cursor.fetchone()
+
+            if user:
+                # User is here, already confirmed so show them the dashboard page
+                if user[4] == 1:  # User is already confirmed
+                    logging.info(f"> found in db and confirmed:  {user}")
+                    return redirect(url_for('dashboard'))
+
+                # they are in the db but not confirmed send them a new code....
+                else:
+                    logging.info(f"> found in db but NOT CONFIRMED:  {user}")
+                    code = generate_random_code()
+                    cursor.execute('UPDATE users SET code=? WHERE phone_number=?', (code, phone_number))
+                    logging.info(f"> generated new code and updated users with new code: {code} for tn: {phone_number}")
+                    conn.commit()
+                    message = client.messages.create(
+                        body=f'Your verification code is: {code}',
+                        from_=twilio_tn,
+                        to=phone_number
+                    )
+                    logging.info(f"> sent a new OTC as SMS ")
+                    flash('Another new code was sent to your phone!')
+
+            # they are not in the DB - get a new code, and add them to db and send the intial code via sms
             else:
-                logging.info(f"> found in db but NOT CONFIRMED:  {user}")
                 code = generate_random_code()
-                cursor.execute('UPDATE users SET code=? WHERE phone_number=?', (code, phone_number))
-                logging.info(f"> generated new code and updated users with new code: {code} for tn: {phone_number}")
-                conn.commit()
-                message = client.messages.create(
-                    body=f'Your verification code is: {code}',
-                    from_=twilio_tn,
-                    to=phone_number
-                )
-                logging.info(f"> sent new code as SMS ")
-                flash('Another new code was sent to your phone!')
+                body = f'Your verification code is: {code}'
+                from_= twilio_tn
+                to   = phone_number
+                message_sid = send_twilio_message(body, from_, to)
 
-        # they are not in the DB - get a new code, and add them to db and send the intial code via sms
-        else:
+                # check for Twilio errors and report them
+                if message_sid:
+                    flash('Code sent to your phone!', 'success')
+                    cursor.execute('INSERT INTO users (phone_number, code, confirmed) VALUES (?, ?, ?)', (phone_number, code, 0))
+                    conn.commit()
+                    logging.info(f"> sent first OTC as SMS ")
+                else:
+                    flash('Failed to send you a code to verify your number. Please check the number and try again.', 'error')
+                    return redirect(url_for('index'))
+
+            # close any DB connections
+            conn.close()
+            return redirect(url_for('confirm_code'))
+
+
+        # Whats App number was submitted
+        if whatsapp_form.validate_on_submit():
+            logging.info(f"> Submitted a whats app number............ ")
             code = generate_random_code()
-            cursor.execute('INSERT INTO users (phone_number, code, confirmed) VALUES (?, ?, ?)', (phone_number, code, 0))
-            conn.commit()
+
+            # Send OTC via WhatsApp
             message = client.messages.create(
                 body=f'Your verification code is: {code}',
-                from_=twilio_tn,
-                to=phone_number
+                from_='whatsapp:' + twilio_whatsapp_number,
+                to='whatsapp:' + whatsapp_number
             )
-            flash('Code sent to your phone!')
-        conn.close()
-        return redirect(url_for('confirm_code'))
 
-    return render_template('index.html', form=form)
+            # Store the code and WhatsApp number for later verification
+            # Treat WA as a phone number
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO users (phone_number, code, confirmed) VALUES (?, ?, ?)', (whatsapp_number, code, 0))
+            conn.commit()
+            conn.close()
+
+            flash('Code sent to your WhatsApp!')
+        else:
+            flash('Invalid WhatsApp number format')
+            logging.info(f"> calling confirm_code for whats up............ ")
+            return redirect(url_for('confirm_code'))
+
+    return render_template('index.html', phone_form=phone_form, whatsapp_form=whatsapp_form)
 
 
+
+
+######################################################################################################
 
 @app.route('/dashboard')
 def dashboard():
@@ -173,6 +234,7 @@ def dashboard():
 
 
 
+######################################################################################################
 
 @app.route('/confirm', methods=['POST'])
 def confirm():
@@ -197,7 +259,7 @@ def confirm():
             cursor.execute('UPDATE users SET confirmed=1 WHERE id=?', (user[0],))
             conn.commit()
             conn.close()
-            flash('Phone number confirmed!')
+            flash('Phone number confirmed! Now Please enter it again below to visit your Dashboard.')
             logging.info(f">in /confirm ...updated db for {user[1]}")
         else:
             flash('Invalid code. Please try again.')
@@ -206,10 +268,16 @@ def confirm():
 
     return redirect(url_for('index'))
 
+######################################################################################################
 
 @app.route('/confirm_code', methods=['GET', 'POST'])
 def confirm_code():
+    logging.info(f">in /confirm_code route, calling confirm_code.html for code:{code}")
     return render_template('confirm_code.html')
+
+######################################################################################################
+######################################################################################################
+######################################################################################################
 
 
 if __name__ == '__main__':
