@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>Enter your Phone Number</h1>
+  <h1>Phone Number</h1>
+  <h4>US phone numbers only, 10 digits with dashes</h4>
   <form method="POST">
     {{ phone_form.hidden_tag() }}
     <div class="form-group">
@@ -9,12 +10,13 @@
       {{ phone_form.phone_number.label }}
       {{ phone_form.phone_number(id="phone_number", class="form-control", onblur="validatePhoneNumber()") }}
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-primary">Submit US Number</button>
   </form>
 
   <hr>
 
-  <h1>WhatsApp Registration</h1>
+  <h1>WhatsApp</h1>
+  <h4>Any WhatsApp Number, global</h4>
   <form method="POST">
     {{ whatsapp_form.hidden_tag() }}
     <div class="form-group">
@@ -22,7 +24,7 @@
       {{ whatsapp_form.whatsapp_number.label }}
       {{ whatsapp_form.whatsapp_number(id="whatsapp_number", class="form-control", onblur="validateWhatsAppNumber()") }}
     </div>
-    <button type="submit" class="btn btn-primary">Submit WhatsApp Registration</button>
+    <button type="submit" class="btn btn-primary">Submit WhatsApp Number</button>
   </form>
 
   <script src="{{ url_for('static', filename='js/custom.js') }}"></script>

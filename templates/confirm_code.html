@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
   <h1>Confirm Code</h1>
   <form method="POST" action="{{ url_for('confirm') }}">
+    {{ confirm_form.hidden_tag() }}
     <div class="form-group">
       <label for="code">Enter 6-digit Code:</label>
+      {{ confirm_form.otc_code(id="code", class="form-control") }}
+ 
+
+<!--      <label for="code">Enter 6-digit Code:</label>
       <input type="text" class="form-control" id="code" name="code" pattern="\d{6}" required>
+  <form method="POST" action="{{ url_for('confirm') }}">
+
+-->
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>

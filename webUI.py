@@ -6,6 +6,8 @@ from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
 import random,os, logging, sqlite3
 from twilio.base.exceptions import TwilioRestException
+from datetime import datetime
+from flask import send_from_directory
 
 app = Flask(__name__)
 
@@ -22,24 +24,28 @@ account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 client = Client(account_sid, auth_token)
 twilio_tn = '+13073646363'
+twilio_whatsapp_number = '+17177166502'
 phone_number = '+12673532203'
+type_sms = 'S'
+type_whatsapp = 'W'
 
 # Create SQLite3 database connection
 conn = sqlite3.connect('users.db')
 cursor = conn.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, phone_number TEXT, code TEXT, name TEXT, confirmed INTEGER, opt_in INTEGER)')
+cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, phone_number TEXT, code TEXT, name TEXT, confirmed INTEGER, opt_in INTEGER, type TEXT, created, DATETIME)')
 logging.info(f"> >> creating connection to users.db")
 conn.commit()
 conn.close()
 
 
 # Create SQLite3 database connection for events
-conn_events = sqlite3.connect('events.db')
-cursor_events = conn_events.cursor()
-cursor_events.execute('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, date TEXT, time TEXT, game_name TEXT, number_of_players INTEGER)')
-logging.info(f"> >> creating connection to  events.db")
-conn_events.commit()
-conn_events.close()
+# this will record events sent
+conn_sentEvents = sqlite3.connect('sentEvents.db')
+cursor_sentEvents = conn_sentEvents.cursor()
+cursor_sentEvents.execute('CREATE TABLE IF NOT EXISTS sentEvents (id INTEGER PRIMARY KEY, created, DATETIME, target TEXT, game TEXT, event_id INT)')
+logging.info(f"> >> creating connection to  sentEvents.db")
+conn_sentEvents.commit()
+conn_sentEvents.close()
 
 
 
@@ -55,7 +61,13 @@ class WhatsAppRegistrationForm(FlaskForm):
     whatsapp_number = StringField('WhatsApp Number (e.g., +123 456 7890)', validators=[
         DataRequired()
     ])
-    submit_whatsapp = SubmitField('Submit WhatsApp Registration')
+    submit_whatsapp = SubmitField('Submit WhatsApp number for any country')
+
+class ConfirmationForm(FlaskForm):
+    otc_code = StringField('Enter 6-digit Code)', validators=[
+        DataRequired()
+    ])
+    submit_code = SubmitField('Submit code to verify account')
 
 
 
@@ -126,6 +138,7 @@ def index():
 
     phone_form = PhoneNumberForm()
     whatsapp_form = WhatsAppRegistrationForm()
+    current_datetime = datetime.now()
 
     if request.method == 'POST':
 
@@ -172,9 +185,9 @@ def index():
                 # check for Twilio errors and report them
                 if message_sid:
                     flash('Code sent to your phone!', 'success')
-                    cursor.execute('INSERT INTO users (phone_number, code, confirmed) VALUES (?, ?, ?)', (phone_number, code, 0))
+                    cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (phone_number, code, 0, type_sms, current_datetime))
                     conn.commit()
-                    logging.info(f"> sent first OTC as SMS ")
+                    logging.info(f"> sent first OTC / SMS and created user row in users.db")
                 else:
                     flash('Failed to send you a code to verify your number. Please check the number and try again.', 'error')
                     return redirect(url_for('index'))
@@ -187,28 +200,32 @@ def index():
         # Whats App number was submitted
         if whatsapp_form.validate_on_submit():
             logging.info(f"> Submitted a whats app number............ ")
+            whatsapp_number = whatsapp_form.whatsapp_number.data
             code = generate_random_code()
 
             # Send OTC via WhatsApp
             message = client.messages.create(
-                body=f'Your verification code is: {code}',
+                body=f'*{{ {code} }}* is your verification code. For your security, do not share this code.',
                 from_='whatsapp:' + twilio_whatsapp_number,
                 to='whatsapp:' + whatsapp_number
             )
+            logging.info(f"> Tried to send whatsapp message: {message.sid} ")
 
             # Store the code and WhatsApp number for later verification
             # Treat WA as a phone number
             conn = sqlite3.connect('users.db')
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO users (phone_number, code, confirmed) VALUES (?, ?, ?)', (whatsapp_number, code, 0))
+            cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (whatsapp_number, code, 0, type_whatsapp, current_datetime))
             conn.commit()
             conn.close()
 
             flash('Code sent to your WhatsApp!')
-        else:
-            flash('Invalid WhatsApp number format')
             logging.info(f"> calling confirm_code for whats up............ ")
             return redirect(url_for('confirm_code'))
+        else:
+            flash('Invalid WhatsApp number format')
+            logging.info(f"> error sending whatsapp code ")
+            return redirect(url_for('index'))
 
     return render_template('index.html', phone_form=phone_form, whatsapp_form=whatsapp_form)
 
@@ -216,7 +233,6 @@ def index():
 
 
 ######################################################################################################
-
 @app.route('/dashboard')
 def dashboard():
 
@@ -252,10 +268,10 @@ def dashboard():
         logging.info(f">> user[5] = {user[5]}")
 
         # Fetch events from events.db
-        conn_events = sqlite3.connect('events.db')
+        conn_events = sqlite3.connect('gameEvents.db')
         cursor_events = conn_events.cursor()
 
-        cursor_events.execute('SELECT * FROM events')
+        cursor_events.execute('SELECT * FROM gameEvents')
         events = cursor_events.fetchall()
         conn_events.close()
         
@@ -299,35 +315,47 @@ def update_opt_in():
         return jsonify({'success': False}), 500
 
 
-
-
 ######################################################################################################
+#
+# Confirming OTC Routes
 
+@app.route('/confirm_code', methods=['GET', 'POST'])
+def confirm_code():
+    confirm_form = ConfirmationForm()
+    logging.info(f">in /confirm_code route, calling confirm_code.html for code")
+    return render_template('confirm_code.html', confirm_form=confirm_form)
+
+
+############################################
 @app.route('/confirm', methods=['POST'])
 def confirm():
     
-
-    code = request.form.get('code')  # Get the submitted code
-    logging.info(f">in /confirm code:{code}")
+    code = request.form.get('otc_code')  # Get the submitted code
+    cleaned_code = code.strip()
+    logging.info(f">in CONFIRM with code:{cleaned_code}")
 
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE code=? AND confirmed=0', (code,))
+    cursor.execute('SELECT * FROM users WHERE code=? AND confirmed=0', (cleaned_code,))
     user = cursor.fetchone()
-    logging.info(f">in /confirm user:{user}")
+    logging.info(f">in CONFIRM with user:{user}")
 
     if user and user[4] == 0:
-        logging.info(f">in /confirm ...not confirmed yet")
+        logging.info(f">in CONFIRM ...found the row:")
         logging.info(f">> user[1] = {user[1]}")
         logging.info(f">> user[2] = {user[2]}")
         logging.info(f">> user[3] = {user[3]}")
         logging.info(f">> user[4] = {user[4]}")
-        if user[2] == code:
+        logging.info(f">> user[5] = {user[5]}")
+        logging.info(f">> user[6] = {user[6]}")
+        logging.info(f">> user[7] = {user[7]}")
+        if user[2] == cleaned_code:
+            logging.info(f">in CONFIRM if true for  {user[2]} = {cleaned_code}")
             cursor.execute('UPDATE users SET confirmed=1 WHERE id=?', (user[0],))
             conn.commit()
             conn.close()
             flash('Phone number confirmed! Now Please enter it again below to visit your Dashboard.')
-            logging.info(f">in /confirm ...updated db for {user[1]}")
+            logging.info(f">in CONFIRM ...updated db and CONFIRMED {user[1]}")
         else:
             flash('Invalid code. Please try again.')
     else:
@@ -335,12 +363,6 @@ def confirm():
 
     return redirect(url_for('index'))
 
-######################################################################################################
-
-@app.route('/confirm_code', methods=['GET', 'POST'])
-def confirm_code():
-    logging.info(f">in /confirm_code route, calling confirm_code.html for code")
-    return render_template('confirm_code.html')
 
 ######################################################################################################
 ######################################################################################################

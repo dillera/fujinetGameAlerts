@@ -110,3 +110,15 @@ body {
 .navbar-toggler {
   border: none;
 }
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table th, .table td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
