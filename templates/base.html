@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script src="{{ url_for('static', filename='js/libphonenumber.js') }}"></script>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('favicon') }}" />
 
     <title>FujiNet Alerting Systemn</title>
   </head>
@@ -17,19 +18,18 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav ml-auto">
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('index') }}">Register</a>
+        <a class="nav-link" href="{{ url_for('index') }}">Register & Login</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('privacy') }}">Privacy Policy</a>
+      </li>
         <li class="nav-item">
         <a class="nav-link" href="{{ url_for('index') }}">Enter your number to register, confirm with the code. Then enter number again here to login and opt-in to receive messages.</a>
       </li>
-     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('dashboard') }}">WhatsApp is NOT currently working</a>
-      </li>
-
-
+ 
     </ul>
   </div>
 </nav>

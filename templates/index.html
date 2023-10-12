@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
 
 {% block content %}
+
   <h1>Phone Number</h1>
   <h4>US phone numbers only, 10 digits with dashes</h4>
   <form method="POST">
@@ -16,7 +18,7 @@
   <hr>
 
   <h1>WhatsApp</h1>
-  <h4>Any WhatsApp Number, global</h4>
+  <h4>Any WhatsApp Number, globally, no spaces with leading +</h4>
   <form method="POST">
     {{ whatsapp_form.hidden_tag() }}
     <div class="form-group">
@@ -27,7 +29,24 @@
     <button type="submit" class="btn btn-primary">Submit WhatsApp Number</button>
   </form>
 
-  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
+
+
+    <h1>Be notified of new Games</h1>
+   <p>
+      By submitting this form and then siging up for text messages you consent to 
+       receive notifications and marketing test messages from this system via Twilio. 
+       Consent is not a condition of purchase.
+       Messaging and Data Rates may apply. Messaging frequency varies.
+    </p>
+
+    <p> 
+      You can unsubscribe at any time by replying STOP to a message or clicking on the unsubscribe link in the dashboard.
+    </p>
+    
+    <p> 
+<a class="nav-link" href="{{ url_for('privacy') }}">Privacy Policy</a>
+ </p>
 
 {% endblock %}
 

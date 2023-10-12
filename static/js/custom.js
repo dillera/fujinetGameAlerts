@@ -35,7 +35,7 @@ function validateWhatsAppNumber() {
     var phoneNumber = inputElement.value;
 
     if (phoneNumber) {
-        var isValid = window.libphonenumber.isValidNumberForRegion(phoneNumber, 'US');
+        var isValid = window.libphonenumber.isValidNumberForRegion(phoneNumber, 'UK');
         if (!isValid) {
             alert('Invalid number. Please enter a valid international or US whats app number.');
             inputElement.value = '';

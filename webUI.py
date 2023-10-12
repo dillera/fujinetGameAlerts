@@ -22,11 +22,11 @@ csrf = CSRFProtect(app)
 # Twilio credentials
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-client = Client(account_sid, auth_token)
-twilio_tn = '+13073646363'
+client                 = Client(account_sid, auth_token)
+twilio_tn              = '+13073646363'
 twilio_whatsapp_number = '+17177166502'
-phone_number = '+12673532203'
-type_sms = 'S'
+phone_number           = '+12673532203'
+type_sms      = 'S'
 type_whatsapp = 'W'
 
 # Create SQLite3 database connection
@@ -58,7 +58,7 @@ class PhoneNumberForm(FlaskForm):
     submit = SubmitField('Submit US Number for SMS')
 
 class WhatsAppRegistrationForm(FlaskForm):
-    whatsapp_number = StringField('WhatsApp Number (e.g., +123 456 7890)', validators=[
+    whatsapp_number = StringField('WhatsApp Number (e.g., +1234567890)', validators=[
         DataRequired()
     ])
     submit_whatsapp = SubmitField('Submit WhatsApp number for any country')
@@ -197,36 +197,82 @@ def index():
             return redirect(url_for('confirm_code'))
 
 
+        ####################################################
         # Whats App number was submitted
         if whatsapp_form.validate_on_submit():
-            logging.info(f"> Submitted a whats app number............ ")
+            logging.info(f"> WA > Submitted a whats app number............ ")
             whatsapp_number = whatsapp_form.whatsapp_number.data
             code = generate_random_code()
 
-            # Send OTC via WhatsApp
-            message = client.messages.create(
-                body=f'*{{ {code} }}* is your verification code. For your security, do not share this code.',
-                from_='whatsapp:' + twilio_whatsapp_number,
-                to='whatsapp:' + whatsapp_number
-            )
-            logging.info(f"> Tried to send whatsapp message: {message.sid} ")
-
-            # Store the code and WhatsApp number for later verification
-            # Treat WA as a phone number
+            # Find out if the user has a row in the DB
             conn = sqlite3.connect('users.db')
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (whatsapp_number, code, 0, type_whatsapp, current_datetime))
-            conn.commit()
-            conn.close()
+            cursor.execute('SELECT * FROM users WHERE phone_number=?', (whatsapp_number,))
+            user = cursor.fetchone()
 
-            flash('Code sent to your WhatsApp!')
-            logging.info(f"> calling confirm_code for whats up............ ")
-            return redirect(url_for('confirm_code'))
+            if user:
+                # User is here, AND already confirmed show them the dashboard page
+                # pass along the phone number so we can use it to determine opt_in
+                if user[4] == 1:  # User is already confirmed
+                    logging.info(f"> WA > found in db and confirmed:  {user}")
+                    return redirect(url_for('dashboard', phone_number=whatsapp_number))
+                    #return redirect(url_for('dashboard'))
+
+                # they are in the db but not confirmed send them a new code....
+                else:
+                    logging.info(f"> WA >found in db but NOT CONFIRMED:  {user}")
+                    cursor.execute('UPDATE users SET code=? WHERE phone_number=?', (code, whatsapp_number))
+                    logging.info(f"> WA >generated new code and updated users with new code: {code} for tn: {whatsapp_number}")
+                    conn.commit()
+                    conn.close()
+
+                    # Send another code to the WA number
+                    message = client.messages.create(
+                        body=f'*{code}* is your verification code. For your security, do not share this code.',
+                        from_='whatsapp:' + twilio_whatsapp_number,
+                        to='whatsapp:' + whatsapp_number
+                    )
+                    logging.info(f"> WA > Sent whatsapp message: {message.sid} with new code {code} ")
+                    flash('A new code was sent to WhatsApp please check your phone!')
+                    return redirect(url_for('confirm_code'))
+
+            # they are not in the DB - get a new code, and add them to db and send the intial code via sms
+            else:
+
+                # Send OTC via WhatsApp
+                message = client.messages.create(
+                    body=f'*{code}* is your verification code. For your security, do not share this code.',
+                    from_='whatsapp:' + twilio_whatsapp_number,
+                    to='whatsapp:' + whatsapp_number
+                )
+                logging.info(f"> WA >Sent whatsapp message: {message.sid} ")
+
+                # Store the code and WhatsApp number for later verification
+                # Treat WA as a phone number
+                conn = sqlite3.connect('users.db')
+                cursor = conn.cursor()
+                cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (whatsapp_number, code, 0, type_whatsapp, current_datetime))
+                conn.commit()
+                conn.close()
+
+                flash('A code was sent to your WhatsApp- Please check.')
+                logging.info(f"> WA > calling confirm_code for whats up............ ")
+                return redirect(url_for('confirm_code'))
+
         else:
             flash('Invalid WhatsApp number format')
-            logging.info(f"> error sending whatsapp code ")
+            logging.info(f"> WA >error submitting proper WA number, reload index page ")
             return redirect(url_for('index'))
 
+
+            # close any DB connections
+            return redirect(url_for('confirm_code'))
+
+
+
+
+
+    # nothing submitted, this is the first GET to load the page
     return render_template('index.html', phone_form=phone_form, whatsapp_form=whatsapp_form)
 
 
@@ -315,6 +361,7 @@ def update_opt_in():
         return jsonify({'success': False}), 500
 
 
+
 ######################################################################################################
 #
 # Confirming OTC Routes
@@ -366,13 +413,16 @@ def confirm():
 
 ######################################################################################################
 ######################################################################################################
-######################################################################################################
 
 # Route to serve favicon.ico
 @app.route('/favicon.ico')
 def favicon():
     logging.info(f">looking for favicon")
     return send_from_directory(app.root_path, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
 
 
 

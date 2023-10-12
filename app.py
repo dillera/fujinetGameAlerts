@@ -1,11 +1,14 @@
+#
+# FGS Event Processor and Twilio Handler
+# Handles POSTs from lobby server for new games
+# Handles POSTS from twilio for incoming whatsapp or sms messages
+# dillera 10.2023
+#
 from flask import Flask, request, jsonify, g
-import sqlite3
+import sqlite3, os, logging
 from twilio.rest import Client
 from dotenv import load_dotenv
-import os
-import logging
-# Load environment variables
-#load_dotenv()
+
 
 
 app = Flask(__name__)
@@ -15,12 +18,19 @@ app = Flask(__name__)
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 twilio_tn   = '+17177166502'
-#twilio_tn = '+13073646363'
-to_phone_number        = '+12673532203'
+
+account_sid = os.getenv('TWILIO_ACCT_SID')
+auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
+client      = Client(account_sid, auth_token)
+#twilio_mo   = '+13073646363'
+twilio_mo   = '+17177166502'
+failsafe_mt = '+12673532203'
+type_sms      = 'S'
+type_whatsapp = 'W'
 app.config['DATABASE'] = 'gameEvents.db'
-client = Client(account_sid, auth_token)
 
 
+###########################################################################
 # Connect to database
 def get_db():
     db = getattr(g, '_database', None)
@@ -60,9 +70,23 @@ cursor.execute('''
 ''')
 conn.commit()
 
+## add or remove whatsapp prefix to TNs
+def toggle_whatsapp_prefix(input_string):
+    prefix = "whatsapp:"
+    
+    # If string starts with 'whatsapp:', remove it
+    if input_string.startswith(prefix):
+        return input_string[len(prefix):]
+    
+    # If string does not start with 'whatsapp:', append it
+    else:
+        return prefix + input_string
+
+
+
 ########################################################
 # Route for incoming JSON POST
-# Route for incoming JSON POST
+#
 @app.route('/game', methods=['POST'])
 def json_post():
     try:
@@ -107,23 +131,78 @@ def json_post():
 
     return jsonify({"message": "Received JSON data and inserted into database"}), 200
 
-########################################################
 
+
+########################################################
+########################################################
 # Route for Twilio SMS
-@app.route('/fuji/sms', methods=['POST'])
+#
+@app.route('/sms', methods=['POST'])
 def twilio_sms():
+    logging.info(f'> in /sms route, about to parse the twilio request....')
+
+   # Log all incoming POST parameters from Twilio
+    for key, value in request.form.items():
+        logging.info(f"{key}: {value}")
+
+     # Get the parameters from request.form instead of request.get_json()
+    body    = request.form.get('Body', '')
+    mt      = request.form.get('To', '')
+    mo      = request.form.get('From', '')
+    #profile = request.form.get('ProfileName', '')  # Not a standard Twilio field, ensure it's being sent
+
+    logging.info(f"> WA body is: >>{body}<< ")
+    logging.info(f"> WA mt is: >>{mt}<< ")
+    logging.info(f"> WA mo is: >>{mo}<< ")
+
+
     # Get the count of rows in the database
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute('SELECT COUNT(*) FROM gameEvents')
     count = cursor.fetchone()[0]
-
     # Prepare response message
-    response_message = f'There are {count} rows in the database.'
+    #response_message = f'There are currently {count} rows in the event database.'
+
+
+    if mo.startswith("whatsapp:"):
+        logging.info(f"> WA >mo is whats app ")
+        clean_tn = toggle_whatsapp_prefix(mo)
+        logging.info(f"> WA >mo cleaned to: {clean_tn} ")
+
+        # Send response to WA
+        logging.info(f"> WA > about to send message to twilio for {clean_tn} ")
+ 
+
+        message = client.messages.create(
+            body=f'There are currently {count} rows in the event database.',
+            from_='whatsapp:' + twilio_tn,
+            to='whatsapp:' + mo
+        )
+
+
+        logging.info(f"> WA > Sent whatsapp message: {response_message} to number {mo} ")
+
+
+    else: 
+        clean_tn = mo
+        logging.info(f"> mo is SMS tn: {clean_tn} ")
+
+        message = client.messages.create(
+            body=f'There are currently {count} rows in the event database.',
+            from_=mt,
+            to=mo
+        )
+        print(f'> SMS > Sent sms to {mo} with SID: {message.sid}')
+
+
 
     # Send the response back to Twilio
-    response = MessagingResponse()
-    response.message(response_message)
+    #response = MessagingResponse()
+    #response.message(response_message)
+    #return str(response)
 
-    return str(response)
+    return jsonify({"message": "handled incoming message"}), 200
 
 
 if __name__ == '__main__':
