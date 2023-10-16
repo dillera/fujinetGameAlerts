@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify, g
 import sqlite3, os, logging
 from twilio.rest import Client
 from dotenv import load_dotenv
-
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -17,17 +17,13 @@ app = Flask(__name__)
 # Initialize Twilio client
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_tn   = '+17177166502'
-
-account_sid = os.getenv('TWILIO_ACCT_SID')
-auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-client      = Client(account_sid, auth_token)
-#twilio_mo   = '+13073646363'
-twilio_mo   = '+17177166502'
-failsafe_mt = '+12673532203'
+twilio_tn   = os.getenv('twilio_tn')
+failsafe_mt = os.getenv('failsafe_mt')
 type_sms      = 'S'
 type_whatsapp = 'W'
 app.config['DATABASE'] = 'gameEvents.db'
+
+client      = Client(account_sid, auth_token)
 
 
 ###########################################################################
@@ -58,8 +54,9 @@ cursor = conn.cursor()
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS gameEvents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created, DATETIME,
         game TEXT,
-        gametype INTEGER,
+        appkey INTEGER,
         server TEXT,
         region TEXT,
         serverurl TEXT,
@@ -83,12 +80,13 @@ def toggle_whatsapp_prefix(input_string):
         return prefix + input_string
 
 
-
 ########################################################
 # Route for incoming JSON POST
 #
 @app.route('/game', methods=['POST'])
 def json_post():
+    current_datetime = datetime.now()
+
     try:
         data = request.get_json()
 
@@ -99,10 +97,10 @@ def json_post():
         db = get_db()
         cursor = db.cursor()
         cursor.execute('''
-            INSERT INTO gameEvents (game, gametype, server, region, serverurl, status, maxplayers, curplayers)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO gameEvents (created, game, appkey, server, region, serverurl, status, maxplayers, curplayers)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            data['game'], data['gametype'], data['server'], data['region'], 
+            current_datetime, data['game'], data['appkey'], data['server'], data['region'], 
             data['serverurl'], data['status'], data['maxplayers'], data['curplayers']
         ))
         db.commit()
@@ -117,12 +115,12 @@ def json_post():
     #client = Client(account_sid, auth_token)
 
     game = data['game']
-    gametype = data['gametype']
+    server = data['server']
 
     message = client.messages.create(
-                              body=f'New game entry: Game: {game}, Game Type: {gametype}',
+                              body=f'New game entry: Game: {game}, Server: {server}',
                               from_=twilio_tn,
-                              to=to_phone_number
+                              to=failsafe_mt
                           )
 
     print(f'Sent message with SID: {message.sid}')
