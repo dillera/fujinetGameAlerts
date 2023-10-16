@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
-import random,os, logging, sqlite3
+import random, os, logging, sqlite3
 from twilio.base.exceptions import TwilioRestException
 from datetime import datetime
 from flask import send_from_directory
@@ -16,18 +16,21 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s [%(levelname)s] - %(message)s',
                     handlers=[logging.StreamHandler()])
 
-app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random string
+app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')  # Change this to a random string
 csrf = CSRFProtect(app)
 
-# Twilio credentials
+# Twilio credentials and required numbers in os env
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-client                 = Client(account_sid, auth_token)
-twilio_tn              = '+13073646363'
-twilio_whatsapp_number = '+17177166502'
-phone_number           = '+12673532203'
+account_sid = os.getenv('TWILIO_ACCT_SID')
+auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
+twilio_tn   = os.getenv('twilio_tn')
+failsafe_mt = os.getenv('failsafe_mt')
 type_sms      = 'S'
 type_whatsapp = 'W'
+
+# create the twilio client object
+client = Client(account_sid, auth_token)
 
 # Create SQLite3 database connection
 conn = sqlite3.connect('users.db')
@@ -229,7 +232,7 @@ def index():
                     # Send another code to the WA number
                     message = client.messages.create(
                         body=f'*{code}* is your verification code. For your security, do not share this code.',
-                        from_='whatsapp:' + twilio_whatsapp_number,
+                        from_='whatsapp:' + twilio_tn,
                         to='whatsapp:' + whatsapp_number
                     )
                     logging.info(f"> WA > Sent whatsapp message: {message.sid} with new code {code} ")
@@ -242,7 +245,7 @@ def index():
                 # Send OTC via WhatsApp
                 message = client.messages.create(
                     body=f'*{code}* is your verification code. For your security, do not share this code.',
-                    from_='whatsapp:' + twilio_whatsapp_number,
+                    from_='whatsapp:' + twilio_tn,
                     to='whatsapp:' + whatsapp_number
                 )
                 logging.info(f"> WA >Sent whatsapp message: {message.sid} ")
