@@ -72,6 +72,9 @@ class ConfirmationForm(FlaskForm):
     ])
     submit_code = SubmitField('Submit code to verify account')
 
+class DeletionForm(FlaskForm):
+    phone_number = StringField('Phone Number (e.g., 555-555-5555)')
+    submit_code = SubmitField('Delete all my Data')
 
 
 def generate_random_code():
@@ -320,32 +323,34 @@ def dashboard():
         conn_events = sqlite3.connect('gameEvents.db')
         cursor_events = conn_events.cursor()
 
-        cursor_events.execute('SELECT * FROM gameEvents')
+        cursor_events.execute('SELECT * FROM gameEvents ORDER BY datetime DESC')
         events = cursor_events.fetchall()
         conn_events.close()
         
         # set the opt_in stats
-        opt_in_status = user[5]
+        #opt_in_status = user[5]
+
+        delete_form = DeletionForm()
 
         #return render_template('dashboard.html', events=events, phone_number=cleaned_phone, opt_in=opt_in_status)
-        return render_template('dashboard.html', events=events, phone_number=phone_number)
+        return render_template('dashboard.html', events=events, phone_number=phone_number, delete_form=delete_form )
 
 
     else:
         flash('Invalid user not found in DB.')
 
-    flash('Something bad - > Welcome to the Dashboard Page.')
+    flash('Something bad happened - > Welcome back to the index page- try that again.')
     conn_users.close()
     return redirect(url_for('index'))
 
 
+######################################################################################################
 @app.route('/update_opt_in', methods=['POST'])
 def update_opt_in():
     logging.info(f">in update_opt_in going to update opt-in status....")
     logging.info(f"Received request: {request.json}")
  
     try:
-
         opt_in_status = request.json.get('opt_in_status')
         phone         = request.json.get('phone')
 
@@ -366,9 +371,7 @@ def update_opt_in():
 
 
 ######################################################################################################
-#
 # Confirming OTC Routes
-
 @app.route('/confirm_code', methods=['GET', 'POST'])
 def confirm_code():
     confirm_form = ConfirmationForm()
@@ -414,9 +417,59 @@ def confirm():
     return redirect(url_for('index'))
 
 
-######################################################################################################
-######################################################################################################
+############################################
+@app.route('/delete_user', methods=['POST'])
+def delete_user():
+    logging.info(f">in delete_user top of the try.")
 
+    try:
+        # Get the phone number from the form
+        phone_number = request.form.get('phone')
+
+        # Check if the phone number is empty
+        if not phone_number:
+            flash('Please enter a phone number.')
+            #return redirect(url_for('dashboard'))
+            return render_template('dashboard.html', phone_number=phone_number )
+
+        logging.info(f">in delete_user going to try and delete from users....")
+        logging.info(f"Received request: {request}")
+        #phone_number = request.form.get('phone_number')
+        phone_number = phone_form.phone_number.data
+
+        # Delete the user from the database based on the current phone_number
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM users WHERE phone_number=?', (phone_number,))
+        conn.commit()
+        conn.close()
+
+        # You can use flash to display a message if needed
+        flash('Going to remove user data from the system.....')
+
+        # Redirect the user to a new page (e.g., a confirmation page)
+        return redirect(url_for('deleted_confirmation'))
+
+ 
+    except Exception as e:
+        logging.info(f">in delete_user handling an exception....")
+        # Handle other exceptions if needed
+        flash('An error occurred. Please try again later.')
+        return render_template('dashboard.html', phone_number=phone_number )
+
+
+
+
+@app.route('/deleted_confirmation')
+def deleted_confirmation():
+    logging.info(f">in deleted_confirmation good bye....")
+    # Your view logic here
+    flash('Confirmed: your user and all data are deleted from the system.')
+    return render_template('deleted_confirmation.html')
+
+
+######################################################################################################
+######################################################################################################
 # Route to serve favicon.ico
 @app.route('/favicon.ico')
 def favicon():

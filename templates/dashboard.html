@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>Welcome to your Dashboard</h1>
+  <h1>Welcome to your Alerts Dashboard</h1>
 
 
   <form id="optInForm">
@@ -52,6 +52,16 @@
     }
   </script>
 
+<h2>Delete My Data</h2>
+<form onsubmit="return confirmDeletion();" method="POST" action="{{ url_for('delete_user') }}">
+  {{ delete_form.hidden_tag() }}
+  {{ delete_form.phone_number.label }}
+  {{ delete_form.phone_number(id="phone", class="form-control") }}
+  <button type="submit" class="btn btn-danger">Delete my info</button>
+</form>
+
+
+
    <h2>Events</h2>
   <table class="table table-bordered">
     <thead>
@@ -74,4 +84,9 @@
     </tbody>
   </table>
 
+ <script>
+    function confirmDeletion() {
+      return confirm('Are you sure you want to delete your info and all data?');
+    }
+  </script>
 {% endblock %}

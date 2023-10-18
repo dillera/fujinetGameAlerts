@@ -42,3 +42,8 @@ function validateWhatsAppNumber() {
         }
     }
 }
+
+
+function confirmDeletion() {
+      return confirm('Are you sure you want to delete your info and all data?');
+    }

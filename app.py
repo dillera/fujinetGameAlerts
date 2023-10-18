@@ -9,7 +9,7 @@ import sqlite3, os, logging
 from twilio.rest import Client
 from dotenv import load_dotenv
 from datetime import datetime
-
+import requests
 
 app = Flask(__name__)
 
@@ -22,6 +22,8 @@ failsafe_mt = os.getenv('failsafe_mt')
 type_sms      = 'S'
 type_whatsapp = 'W'
 app.config['DATABASE'] = 'gameEvents.db'
+
+webhook_url = os.getenv('discord_webhook')
 
 client      = Client(account_sid, auth_token)
 
@@ -79,7 +81,47 @@ def toggle_whatsapp_prefix(input_string):
     else:
         return prefix + input_string
 
+# send a message to discord for this event
+def send_to_discord(message_content):
+    logging.info(f'in send_to_discord with message: {message_content}')
+    logging.info(f'target url: {webhook_url}')
+    # Replace with the webhook URL you copied from Discord
+    #webhook_url = 'YOUR_DISCORD_WEBHOOK_URL'
+    # defined above
 
+    # Create the message payload
+    data = {
+        "content": message_content,
+        # Optionally, you can also add "username" and "avatar_url" parameters here to customize the webhook's appearance
+    }
+
+    # Send the message to Discord
+    response = requests.post(webhook_url, json=data)
+
+    # Log the response (optional)
+    if response.status_code == 204:
+        print("Message sent to Discord successfully!")
+    else:
+        print(f"Failed to send message to Discord. Status code: {response.status_code}. Response: {response.text}")
+
+    return response
+
+# send a message via Twilio for this event
+def send_sms(to, body):
+    """Helper function to send an SMS using Twilio."""
+    try:
+        message = client.messages.create(
+            body=body,
+            from_=twilio_tn,
+            to=to
+        )
+        print(f"Sent SMS to {to}")
+    except Exception as e:
+        print(f"Error sending SMS to {to}: {e}")
+
+
+########################################################
+########################################################
 ########################################################
 # Route for incoming JSON POST
 #
@@ -116,15 +158,41 @@ def json_post():
 
     game = data['game']
     server = data['server']
+    players = data['curplayers']
 
-    message = client.messages.create(
-                              body=f'New game entry: Game: {game}, Server: {server}',
-                              from_=twilio_tn,
-                              to=failsafe_mt
-                          )
+    alert_message = f'New game participant on Game: [{game}] running on Server: [{server}] with {players} players currently online.'
 
-    print(f'Sent message with SID: {message.sid}')
+    #message = client.messages.create(
+    #                          body=alert_message,
+    #                          from_=twilio_tn,
+    #                          to=failsafe_mt
+    #                      )
 
+
+    ########################################################
+    # find users who have opted in for alerts and send them SMS
+    # Connect to the SQLite database
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    # Execute the SELECT query
+    cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
+    phone_numbers = cursor.fetchall()
+    conn.close()
+
+    # Loop over the result set and send SMS notifications
+    for row in phone_numbers:
+        phone_number = row[0]
+        send_sms(phone_number, alert_message)
+        logging.info(f'Sent message to phone: {phone_number} ')
+
+
+
+    ########################################################
+    # Send Discord Event for every event posted into this app
+    # 
+    discord_response = send_to_discord(alert_message)
+    logging.info(f'Sent to Discord: {discord_response}')
      # ... (rest of the code remains the same)
 
     return jsonify({"message": "Received JSON data and inserted into database"}), 200
@@ -160,7 +228,7 @@ def twilio_sms():
     cursor.execute('SELECT COUNT(*) FROM gameEvents')
     count = cursor.fetchone()[0]
     # Prepare response message
-    #response_message = f'There are currently {count} rows in the event database.'
+    response_message = f'There are currently {count} rows in the event database.'
 
 
     if mo.startswith("whatsapp:"):
@@ -169,15 +237,13 @@ def twilio_sms():
         logging.info(f"> WA >mo cleaned to: {clean_tn} ")
 
         # Send response to WA
-        logging.info(f"> WA > about to send message to twilio for {clean_tn} ")
+        logging.info(f"> WA > about to send message to: {mo} ")
  
-
         message = client.messages.create(
             body=f'There are currently {count} rows in the event database.',
             from_='whatsapp:' + twilio_tn,
-            to='whatsapp:' + mo
+            to=mo
         )
-
 
         logging.info(f"> WA > Sent whatsapp message: {response_message} to number {mo} ")
 
@@ -193,12 +259,6 @@ def twilio_sms():
         )
         print(f'> SMS > Sent sms to {mo} with SID: {message.sid}')
 
-
-
-    # Send the response back to Twilio
-    #response = MessagingResponse()
-    #response.message(response_message)
-    #return str(response)
 
     return jsonify({"message": "handled incoming message"}), 200
 
