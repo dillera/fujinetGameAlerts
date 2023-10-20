@@ -115,7 +115,19 @@ def send_sms(to, body):
             from_=twilio_tn,
             to=to
         )
-        print(f"Sent SMS to {to}")
+        logging.info(f"> Sent SMS event message: {message.sid} to: {to} ")
+    except Exception as e:
+        print(f"Error sending SMS to {to}: {e}")
+
+# send a Whatsapp message via Twilio for this event
+def send_whatsapp(to, body):
+    try:
+        message = client.messages.create(
+            body=body,
+            from_='whatsapp:' + twilio_tn,
+            to='whatsapp:' + to
+        )
+        logging.info(f"> Sent whatsapp event message: {message.sid} to: {to} ")
     except Exception as e:
         print(f"Error sending SMS to {to}: {e}")
 
@@ -159,7 +171,6 @@ def json_post():
     game = data['game']
     server = data['server']
     players = data['curplayers']
-
     alert_message = f'New game participant on Game: [{game}] running on Server: [{server}] with {players} players currently online.'
 
     #message = client.messages.create(
@@ -178,14 +189,28 @@ def json_post():
     # Execute the SELECT query
     cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
     phone_numbers = cursor.fetchall()
-    conn.close()
+    #conn.close()
 
     # Loop over the result set and send SMS notifications
     for row in phone_numbers:
         phone_number = row[0]
         send_sms(phone_number, alert_message)
-        logging.info(f'Sent message to phone: {phone_number} ')
+        logging.info(f'Sent sms message to phone: {phone_number} ')
 
+
+    # Execute the SELECT query
+    cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='W'")
+    phone_numbers = cursor.fetchall()
+    conn.close()
+
+    # Loop over the result set and send SMS notifications
+    for row in phone_numbers:
+        phone_number = row[0]
+        send_whatsapp(phone_number, alert_message)
+        logging.info(f'Sent whatsapp message to phone: {phone_number} ')
+
+
+    conn.close()
 
 
     ########################################################

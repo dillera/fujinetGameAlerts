@@ -4,7 +4,38 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script src="{{ url_for('static', filename='js/libphonenumber.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imask.js') }}"></script>
     <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('favicon') }}" />
+//    <script src="https://cdn.jsdelivr.net/npm/imask"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Initialize an input mask for the US phone number field
+    var phoneInput = document.getElementById('phone_number');
+    var phoneMask = new IMask(phoneInput, {
+      mask: '000-000-0000',
+      lazy: false,  // Format the input immediately as you type
+    });
+
+   // Create a mask for WhatsApp number input
+   // Create a mask for WhatsApp number input
+  var whatsappInput = document.getElementById('whatsapp_number');
+  var whatsappMask = new IMask(whatsappInput, {
+mask: [
+      {
+        mask: '+{00}(000)000-0000'
+      },
+      {
+        mask: /^\S*@?\S*$/
+      }
+    ]
+    }
+)
+
+ });
+</script>
+
 
     <title>FujiNet Alerting Systemn</title>
   </head>

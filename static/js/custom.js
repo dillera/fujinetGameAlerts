@@ -1,19 +1,5 @@
-
-
 console.log
 
-document.getElementById('whatsapp_number').addEventListener('blur', function() {
-    var inputElement = document.getElementById('whatsapp_number');
-    var phoneNumber = inputElement.value;
-
-    if (phoneNumber) {
-        var isValid = window.libphonenumber.isValidNumberForRegion(phoneNumber, 'US');
-        if (!isValid) {
-            alert('Invalid number. Please enter a valid international or US whats app number.');
-            inputElement.value = '';
-        }
-    }
-});
 
 
 function validatePhoneNumber() {
@@ -31,17 +17,18 @@ function validatePhoneNumber() {
 
 
 function validateWhatsAppNumber() {
-    var inputElement = document.getElementById('whatsapp_number');
-    var phoneNumber = inputElement.value;
+  var inputElement = document.getElementById('whatsapp_number');
+  var whatsappNumber = inputElement.unmaskedValue;
 
-    if (phoneNumber) {
-        var isValid = window.libphonenumber.isValidNumberForRegion(phoneNumber, 'UK');
-        if (!isValid) {
-            alert('Invalid number. Please enter a valid international or US whats app number.');
-            inputElement.value = '';
-        }
+  if (whatsappNumber) {
+    var isValid = window.libphonenumber.isValidNumberForRegion(whatsappNumber, 'GB'); // 'GB' for the United Kingdom
+    if (!isValid) {
+      alert('Invalid number. Please enter a valid international WhatsApp number.');
+      inputElement.value = ''; // Clear the input if it's not valid
     }
+  }
 }
+
 
 
 function confirmDeletion() {

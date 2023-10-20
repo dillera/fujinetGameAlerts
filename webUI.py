@@ -1,13 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+# webUI for FujiNet Game Alerts/2023/dillera@dillernet.com
+#
+import random, os, logging, sqlite3
+from datetime import datetime
+
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
+from flask import send_from_directory
+from flask.sessions import SecureCookieSession
+
+
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
-import random, os, logging, sqlite3
 from twilio.base.exceptions import TwilioRestException
-from datetime import datetime
-from flask import send_from_directory
+
+
 
 app = Flask(__name__)
 
@@ -54,26 +62,29 @@ conn_sentEvents.close()
 
 ###################################################
 
+class MySession(SecureCookieSession):
+    def __init__(self, *args, **kwargs):
+        kwargs["samesite"] = "None"
+        super(MySession, self).__init__(*args, **kwargs)
+
+app.session_cookie_class = MySession
+
+
+
 class PhoneNumberForm(FlaskForm):
-    phone_number = StringField('Phone Number (e.g., 555-555-5555)', validators=[
-        DataRequired()
-    ])
+    phone_number = StringField('Phone Number (start with area code)', validators=[DataRequired()])
     submit = SubmitField('Submit US Number for SMS')
 
 class WhatsAppRegistrationForm(FlaskForm):
-    whatsapp_number = StringField('WhatsApp Number (e.g., +1234567890)', validators=[
-        DataRequired()
-    ])
+    whatsapp_number = StringField('WhatsApp Number (do not type +)', validators=[DataRequired()])
     submit_whatsapp = SubmitField('Submit WhatsApp number for any country')
 
 class ConfirmationForm(FlaskForm):
-    otc_code = StringField('Enter 6-digit Code)', validators=[
-        DataRequired()
-    ])
+    otc_code = StringField('Enter 6-digit Code)', validators=[DataRequired() ])
     submit_code = SubmitField('Submit code to verify account')
 
 class DeletionForm(FlaskForm):
-    phone_number = StringField('Phone Number (e.g., 555-555-5555)')
+    phone_number = StringField('Phone Number (e.g., 555-555-5555)', validators=[DataRequired()])
     submit_code = SubmitField('Delete all my Data')
 
 
@@ -100,6 +111,21 @@ def clean_phone(phone_number):
     else:
         logging.info(f"> cleaning invalid format")
         return None  # Invalid phone number format
+
+
+def transform_phone_number(phone_str):
+    # Remove non-numeric characters
+    cleaned_number = ''.join(filter(str.isdigit, phone_str))
+    
+    # Prepend country code and return
+    return '+1' + cleaned_number
+
+def transform_whatsapp_number(phone_str):
+    # Remove non-numeric characters
+    cleaned_number = ''.join(filter(str.isdigit, phone_str))
+    
+    # Prepend the '+' sign and return
+    return '+' + cleaned_number
 
 
 def send_twilio_message(body, from_, to):
@@ -150,7 +176,9 @@ def index():
 
 
         if phone_form.validate_on_submit():
-            phone_number = phone_form.phone_number.data
+            phone_number = transform_phone_number(phone_form.phone_number.data)
+#            transformed_phone=transform_phone_number(phone_number)
+            logging.info(f"> CurrentTN:  {phone_number}")
 
             conn = sqlite3.connect('users.db')
             cursor = conn.cursor()
@@ -182,19 +210,24 @@ def index():
 
             # they are not in the DB - get a new code, and add them to db and send the intial code via sms
             else:
+                logging.info(f"> Got a new tn: {phone_number} not found in the DB, going to clean, add it....")
                 code = generate_random_code()
+  
                 body = f'Your verification code is: {code}'
                 from_= twilio_tn
                 to   = phone_number
                 message_sid = send_twilio_message(body, from_, to)
+                transformed_phone=transform_phone_number(phone_number)
+                logging.info(f"> transformed_phone tn: {transformed_phone}")
 
                 # check for Twilio errors and report them
                 if message_sid:
                     flash('Code sent to your phone!', 'success')
-                    cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (phone_number, code, 0, type_sms, current_datetime))
+                    cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (transformed_phone, code, 0, type_sms, current_datetime))
                     conn.commit()
-                    logging.info(f"> sent first OTC / SMS and created user row in users.db")
+                    logging.info(f"> sent first OTC and created row in users.db")
                 else:
+                    logging.info(f"> There was an error, bailing out. ")
                     flash('Failed to send you a code to verify your number. Please check the number and try again.', 'error')
                     return redirect(url_for('index'))
 
@@ -207,7 +240,13 @@ def index():
         # Whats App number was submitted
         if whatsapp_form.validate_on_submit():
             logging.info(f"> WA > Submitted a whats app number............ ")
-            whatsapp_number = whatsapp_form.whatsapp_number.data
+
+            whatsapp_number = transform_whatsapp_number(whatsapp_form.whatsapp_number.data)
+
+            logging.info(f"> WA > Original Number is: {whatsapp_form.whatsapp_number.data} ")
+            logging.info(f"> WA > Trans Number is: {whatsapp_number} ")
+            logging.info(f"> WA > twilio mo: {twilio_tn} ")
+
             code = generate_random_code()
 
             # Find out if the user has a row in the DB
