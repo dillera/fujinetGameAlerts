@@ -7,9 +7,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from flask import send_from_directory
+
 from flask.sessions import SecureCookieSession
-
-
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
@@ -18,6 +17,8 @@ from twilio.base.exceptions import TwilioRestException
 
 
 app = Flask(__name__)
+VERSION = '1.0.0'
+
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO,
@@ -25,20 +26,14 @@ logging.basicConfig(level=logging.INFO,
                     handlers=[logging.StreamHandler()])
 
 app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')  # Change this to a random string
-csrf = CSRFProtect(app)
-
-# Twilio credentials and required numbers in os env
-account_sid = os.getenv('TWILIO_ACCT_SID')
-auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 twilio_tn   = os.getenv('twilio_tn')
 failsafe_mt = os.getenv('failsafe_mt')
 type_sms      = 'S'
 type_whatsapp = 'W'
-
-# create the twilio client object
 client = Client(account_sid, auth_token)
+csrf = CSRFProtect(app)
 
 # Create SQLite3 database connection
 conn = sqlite3.connect('users.db')
@@ -157,13 +152,27 @@ def get_opt_in_status_from_db(phone_number):
         return None  # Return None if no result was found for the given phone number
 
 
+def get_user_count():
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM users')
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
+
+def get_sent_events_count():
+    conn = sqlite3.connect('sentEvents.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM sentEvents')
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
 
 
 ###################################################
 ###################################################
 # Routes
 ###################################################
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -174,11 +183,10 @@ def index():
 
     if request.method == 'POST':
 
-
         if phone_form.validate_on_submit():
             phone_number = transform_phone_number(phone_form.phone_number.data)
 #            transformed_phone=transform_phone_number(phone_number)
-            logging.info(f"> CurrentTN:  {phone_number}")
+            logging.info(f"> In / - TN:  {phone_number} - going to check if in db")
 
             conn = sqlite3.connect('users.db')
             cursor = conn.cursor()
@@ -186,11 +194,13 @@ def index():
             user = cursor.fetchone()
 
             if user:
-                # User is here, already confirmed so show them the dashboard page
+                # User is here, and already confirmed show them the dashboard page
                 # pass along the phone number so we can use it to determine opt_in
                 if user[4] == 1:  # User is already confirmed
                     logging.info(f"> found in db and confirmed:  {user}")
-                    return redirect(url_for('dashboard', phone_number=phone_number))
+                    opt_in_status=get_opt_in_status_from_db(phone_number)
+                    logging.info(f"> opt in status found:  {opt_in_status}")
+                    return redirect(url_for('dashboard', phone_number=phone_number, opt_in_status=opt_in_status))
                     #return redirect(url_for('dashboard'))
 
                 # they are in the db but not confirmed send them a new code....
@@ -309,33 +319,23 @@ def index():
             logging.info(f"> WA >error submitting proper WA number, reload index page ")
             return redirect(url_for('index'))
 
-
             # close any DB connections
             return redirect(url_for('confirm_code'))
 
 
-
-
-
-    # nothing submitted, this is the first GET to load the page
+    # nothing submitted, this is the first GET so load the page
     return render_template('index.html', phone_form=phone_form, whatsapp_form=whatsapp_form)
 
 
 
-
+######################################################################################################
 ######################################################################################################
 @app.route('/dashboard')
 def dashboard():
 
     # if we were called from / then we have the phone_number already
     phone_number = request.args.get('phone_number')
-    #opt_in_status = get_opt_in_status_from_db(phone_number)
-
-
-    # I don't know why but phone_number is +1 format here for some reason
-    # clean it so that there is a match in the DB
-    #cleaned_phone = clean_phone(phone_number)
-
+    logging.info(f">loading dashboard for tn: {phone_number}")
 
     # Check if the user is in the USERS database and confirmed
     # We should check again in case someone just clicked on the Menu Navbar
@@ -344,14 +344,13 @@ def dashboard():
     cursor_users.execute('SELECT * FROM users WHERE phone_number=? AND confirmed=1', (phone_number,))
     user = cursor_users.fetchone()
     logging.info(f">in /dashboard for phone: {phone_number}")
- #   logging.info(f">in /dashboard for phone: {cleaned_phone}")
-
-
+ 
 
     if user:
-        opt_in_status = user[5]  # Assuming `opt_in` is the 6th column in your users table
+        # if they have already confirmed their tn lets login
+        opt_in_status = user[5]
 
-        logging.info(f">in /dashboard found a user....")
+        logging.info(f">in /dashboard")
         logging.info(f">> user[1] = {user[1]}")
         logging.info(f">> user[2] = {user[2]}")
         logging.info(f">> user[3] = {user[3]}")
@@ -366,9 +365,7 @@ def dashboard():
         events = cursor_events.fetchall()
         conn_events.close()
         
-        # set the opt_in stats
-        #opt_in_status = user[5]
-
+        # to be finished
         delete_form = DeletionForm()
 
         #return render_template('dashboard.html', events=events, phone_number=cleaned_phone, opt_in=opt_in_status)
@@ -376,9 +373,9 @@ def dashboard():
 
 
     else:
-        flash('Invalid user not found in DB.')
+        flash('Invalid user-  please register first with a number below.')
 
-    flash('Something bad happened - > Welcome back to the index page- try that again.')
+    flash('Welcome back to the index page- try that again.')
     conn_users.close()
     return redirect(url_for('index'))
 
@@ -456,6 +453,8 @@ def confirm():
     return redirect(url_for('index'))
 
 
+######################################################################################################
+# Deleting users
 ############################################
 @app.route('/delete_user', methods=['POST'])
 def delete_user():
@@ -498,7 +497,7 @@ def delete_user():
 
 
 
-
+############################################
 @app.route('/deleted_confirmation')
 def deleted_confirmation():
     logging.info(f">in deleted_confirmation good bye....")
@@ -507,9 +506,11 @@ def deleted_confirmation():
     return render_template('deleted_confirmation.html')
 
 
+
 ######################################################################################################
 ######################################################################################################
-# Route to serve favicon.ico
+# ancillary routes for mostly static pages
+#
 @app.route('/favicon.ico')
 def favicon():
     logging.info(f">looking for favicon")
@@ -519,6 +520,11 @@ def favicon():
 def privacy():
     return render_template('privacy.html')
 
+@app.route('/about')
+def about():
+    users_count = get_user_count()
+    events_count = get_sent_events_count()
+    return render_template('about.html', version=VERSION, users_count=users_count, events_count=events_count)
 
 
 if __name__ == '__main__':
