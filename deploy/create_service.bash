@@ -19,18 +19,61 @@ print_usage() {
     echo "3. This script places the temporary service file in '/tmp'. Adjust the path in the script if needed."
 }
 
+
 # Check for service name and port number input
+# Fail immediately if not given.
 if [[ -z "$1" ]] || [[ -z "$2" ]]; then
     print_usage
     exit 1
 fi
 
+#
+# Edit below for local env
+
 SERVICE_NAME="$1"
 PORT_NUMBER="$2"
 SERVICE_FILE_PATH="/tmp/${SERVICE_NAME}.service"
-WORKING_DIRECTORY="/home/ubuntu/fujinetGameAlerts"
-PYTHON_ENV_PATH="/home/ubuntu/fujinetGameAlerts/venv"
 
+check_env_var() {
+    local var_name="$1"
+    local var_value="${!var_name}"
+
+    if [[ -z "$var_value" ]]; then
+        echo "Error: Environment variable $var_name is not set."
+        return 1
+    else
+        echo "Found: $var_name is set to $var_value."
+        return 0
+    fi
+}
+
+# Check if the environment variables are set
+check_env_var "FA_SECRET_KEY"
+sk_result=$?
+check_env_var "TWILIO_ACCT_SID"
+ts_result=$?
+check_env_var "TWILIO_AUTH_TOKEN"
+ta_result=$?
+check_env_var "TWILIO_TN"
+tn_result=$?
+check_env_var "DISCORD_WEBHOOK"
+dw_result=$?
+check_env_var "WORKING_DIRECTORY"
+wd_result=$?
+check_env_var "PYTHON_ENV_PATH"
+pp_result=$?
+
+# check each variable and fail if something isn't set
+if [[ $sk_result -ne 0 ]] || [[ $ts_result -ne 0 ]] || [[ $ta_result -ne 0 ]] || [[ $tn_result -ne 0 ]] || [[ $dw_result -ne 0 ]] || [[ $wd_result -ne 0 ]] || [[ $pp_result -ne 0 ]]; then
+    exit 1
+fi
+
+echo 'installing prereqs....'
+
+$PYTHON_ENV_PATH/bin/activate
+$PYTHON_ENV_PATH/bin/pip install gunicorn flask
+
+echo 'creating temp service file.....'
 # Create a systemd service file based on the template
 cat <<EOL > ${SERVICE_FILE_PATH}
 [Unit]
@@ -38,16 +81,25 @@ Description=${SERVICE_NAME}
 After=network.target
 
 [Service]
-User=yourusername
-Group=yourusername
+User=ubuntu
+Group=ubuntu
 WorkingDirectory=${WORKING_DIRECTORY}
+
 Environment="PATH=${PYTHON_ENV_PATH}"
+Environment="TWILIO_ACCT_SID=${TWILIO_ACCT_SID}"
+Environment="TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}"
+Environment="TWILIO_TN=${TWILIO_TN}"
+Environment="FA_SECRET_KEY=${FA_SECRET_KEY}"
+Environment="DISCORD_WEBHOOK=${DISCORD_WEBHOOK}"
+
 ExecStart=${PYTHON_ENV_PATH}/bin/gunicorn -w 4 -b 0.0.0.0:${PORT_NUMBER} ${SERVICE_NAME}:app
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 EOL
+
+
 
 # Copy the service file to systemd directory
 sudo cp ${SERVICE_FILE_PATH} /etc/systemd/system/
@@ -63,3 +115,10 @@ sudo systemctl start ${SERVICE_NAME}
 
 # Display the status of the service
 sudo systemctl status ${SERVICE_NAME}
+
+echo "Service files created and service started, service set to start at boot."
+echo "systemd says:"
+journalctl -u gas -f -b --no-pager
+
+# end
+

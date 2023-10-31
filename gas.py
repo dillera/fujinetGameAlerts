@@ -17,13 +17,12 @@ app = Flask(__name__)
 # Initialize Twilio client
 account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_tn   = os.getenv('twilio_tn')
-failsafe_mt = os.getenv('failsafe_mt')
+twilio_tn   = os.getenv('TWILIO_TN')
+webhook_url = os.getenv('DISCORD_WEBHOOK')
+
 type_sms      = 'S'
 type_whatsapp = 'W'
 app.config['DATABASE'] = 'gameEvents.db'
-
-webhook_url = os.getenv('discord_webhook')
 
 client      = Client(account_sid, auth_token)
 
