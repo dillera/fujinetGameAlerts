@@ -1,8 +1,13 @@
-# webUI for FujiNet Game Alerts/2023/dillera@dillernet.com
+# webUI  G.A.S. - GAME ALERT SYSTEM
+#
+#  Web ui for signup and opt-in for alerts
+#  Shows current opt-in, handles otc, shows event table
+#
+# Andy Diller / dillera / 10/2023
 #
 import random, os, logging, sqlite3
 from datetime import datetime
-
+from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
@@ -15,25 +20,55 @@ from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 
 
-
 app = Flask(__name__)
-VERSION = '1.0.0'
-
 
 # Setup Logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s [%(levelname)s] - %(message)s',
-                    handlers=[logging.StreamHandler()])
+#logging.basicConfig(level=logging.INFO,
+ #                   format='%(asctime)s [%(levelname)s] - %(message)s',
+ #                   handlers=[logging.StreamHandler()])
 
-app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')  # Change this to a random string
-account_sid = os.getenv('TWILIO_ACCT_SID')
-auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_tn   = os.getenv('twilio_tn')
-failsafe_mt = os.getenv('failsafe_mt')
+VERSION = '1.0.0'
+app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')
+account_sid              = os.getenv('TWILIO_ACCT_SID')
+auth_token               = os.getenv('TWILIO_AUTH_TOKEN')
+twilio_tn                = os.getenv('TWILIO_TN')
+working_dir              = os.getenv('WORKING_DIRECTORY')
 type_sms      = 'S'
 type_whatsapp = 'W'
+set_debug     = False
+set_port      = '5101'
 client = Client(account_sid, auth_token)
-csrf = CSRFProtect(app)
+csrf   = CSRFProtect(app)
+
+###################################################
+#
+# Logger
+
+# File path for your logs
+log_file_path = f'{working_dir}/logs/webui.log'
+
+# Set up the handler
+file_handler = TimedRotatingFileHandler(
+    log_file_path, 
+    when="W0", # Rotate every week on Monday (you can adjust this as needed)
+    interval=1,
+    backupCount=4 # Keep 4 weeks worth of logs
+)
+file_handler.setLevel(logging.INFO)
+
+# Formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Set up the logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+
+
+####################################################
+# Databases
+#
 
 # Create SQLite3 database connection
 conn = sqlite3.connect('users.db')
@@ -528,5 +563,5 @@ def about():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True, port=5101)
+    app.run(host='0.0.0.0',debug=set_debug, port=set_port)
 

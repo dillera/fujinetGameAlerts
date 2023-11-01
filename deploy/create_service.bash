@@ -69,7 +69,7 @@ if [[ $sk_result -ne 0 ]] || [[ $ts_result -ne 0 ]] || [[ $ta_result -ne 0 ]] ||
 fi
 
 echo 'installing prereqs....'
-
+echo 'ignore failures if these are already installed...'
 $PYTHON_ENV_PATH/bin/activate
 $PYTHON_ENV_PATH/bin/pip install gunicorn flask
 
@@ -100,6 +100,7 @@ WantedBy=multi-user.target
 EOL
 
 
+echo 'moving files into place.....'
 
 # Copy the service file to systemd directory
 sudo cp ${SERVICE_FILE_PATH} /etc/systemd/system/
@@ -117,8 +118,8 @@ sudo systemctl start ${SERVICE_NAME}
 sudo systemctl status ${SERVICE_NAME}
 
 echo "Service files created and service started, service set to start at boot."
-echo "systemd says:"
-journalctl -u gas -f -b --no-pager
+#echo "systemd says:"
+#journalctl -u gas -f -b --no-pager
 
 # end
 

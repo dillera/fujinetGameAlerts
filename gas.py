@@ -1,8 +1,10 @@
 #
-# FGS Event Processor and Twilio Handler
-# Handles POSTs from lobby server for new games
-# Handles POSTS from twilio for incoming whatsapp or sms messages
-# dillera 10.2023
+# FGS G.A.S. - GAME ALERT SYSTEM
+#  Event Processor and Twilio Handler
+#  Handles POSTs from lobby server for new games
+#  Handles POSTS from twilio for incoming whatsapp or sms messages
+#
+# Andy Diller / dillera / 10/2023
 #
 from flask import Flask, request, jsonify, g
 import sqlite3, os, logging
@@ -10,6 +12,8 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 from datetime import datetime
 import requests
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 app = Flask(__name__)
 
@@ -19,12 +23,40 @@ account_sid = os.getenv('TWILIO_ACCT_SID')
 auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 twilio_tn   = os.getenv('TWILIO_TN')
 webhook_url = os.getenv('DISCORD_WEBHOOK')
-
+working_dir = os.getenv('WORKING_DIRECTORY')
+set_debug     = False
+set_port      = '5100'
 type_sms      = 'S'
 type_whatsapp = 'W'
 app.config['DATABASE'] = 'gameEvents.db'
-
 client      = Client(account_sid, auth_token)
+
+
+###################################################
+#
+# Logger
+
+# File path for your logs
+#log_file_path = f'{working_dir}/logs/gas.log'
+log_file_path = '/home/ubuntu/fujinetGameAlerts/logs/gas.log'
+
+# Set up the handler
+file_handler = TimedRotatingFileHandler(
+    log_file_path, 
+    when="W0", # Rotate every week on Monday (you can adjust this as needed)
+    interval=1,
+    backupCount=4 # Keep 4 weeks worth of logs
+)
+file_handler.setLevel(logging.INFO)
+
+# Formatter
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Set up the logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
 
 
 ###########################################################################
@@ -40,11 +72,6 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
-
-# Set up logger
-logging.basicConfig(level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] - %(message)s',
-    handlers=[logging.StreamHandler()])
 
 
 ## Create SQLite database connection
@@ -68,7 +95,7 @@ cursor.execute('''
 ''')
 conn.commit()
 
-## add or remove whatsapp prefix to TNs
+# add or remove whatsapp prefix to TNs
 def toggle_whatsapp_prefix(input_string):
     prefix = "whatsapp:"
     
@@ -288,6 +315,6 @@ def twilio_sms():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True, port=5100)
+    app.run(host='0.0.0.0',debug=set_debug, port=set_port)
 
 
