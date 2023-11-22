@@ -162,9 +162,9 @@ def send_to_discord(message_content):
 
     # Log the response (optional)
     if response.status_code == 204:
-        print("Message sent to Discord successfully!")
+        logging.info("Message sent to Discord successfully!")
     else:
-        print(f"Failed to send message to Discord. Status code: {response.status_code}. Response: {response.text}")
+        logging.info(f"Failed to send message to Discord. Status code: {response.status_code}. Response: {response.text}")
 
     return response
 
@@ -179,7 +179,7 @@ def send_sms(to, body):
         )
         logging.info(f"> Sent SMS event message: {message.sid} to: {to} ")
     except Exception as e:
-        print(f"Error sending SMS to {to}: {e}")
+        logging.info(f"Error sending SMS to {to}: {e}")
 
 # send a Whatsapp message via Twilio for this event
 def send_whatsapp(to, body):
@@ -191,7 +191,7 @@ def send_whatsapp(to, body):
         )
         logging.info(f"> Sent whatsapp event message: {message.sid} to: {to} ")
     except Exception as e:
-        print(f"Error sending SMS to {to}: {e}")
+        logging.info(f"Error sending SMS to {to}: {e}")
 
 
 def extract_url_and_table_param(url):
@@ -267,22 +267,65 @@ def json_post():
         logging.info(f">> committed update forplayerTracking ")
         conn.close()
 
+ 
+
+        base_url, table_param = extract_url_and_table_param(serverurl)
+
+        if curplayers == 0:
+            alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
+        else:
+            alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
+
+########################################################
+        ########################################################
+        # Send Discord event message to game-alert-system
+
+        discord_response = send_to_discord(alert_message)
+        logging.info(f'Sent to Discord: {discord_response}')
+
+
+########################################################
+        ########################################################
+        # find users who have opted in for alerts and send them SMS
+        # Connect to the SQLite database
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+
+        # SEND SMS
+        # Execute the SELECT query
+        cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
+        phone_numbers = cursor.fetchall()
+        #conn.close()
+
+        # Loop over the result set and send SMS notifications
+        for row in phone_numbers:
+            phone_number = row[0]
+            send_sms(phone_number, alert_message)
+            logging.info(f'Sent sms message to phone: {phone_number} ')
+
+
+        # SEND WHATSAPP
+        # Execute the SELECT query
+        cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='W'")
+        phone_numbers = cursor.fetchall()
+        conn.close()
+
+        # Loop over the result set and send SMS notifications
+        for row in phone_numbers:
+            phone_number = row[0]
+            send_whatsapp(phone_number, alert_message)
+            logging.info(f'Sent whatsapp message to phone: {phone_number} ')
+        conn.close()
+
+
     except Exception as e:
         # Log any exceptions
         logging.error(f'Error processing JSON data: {e}')
         return jsonify({"error": str(e)}), 400
 
 
-
-    base_url, table_param = extract_url_and_table_param(serverurl)
-
-    if curplayers == 0:
-        alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
-    else:
-        alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
-
-    discord_response = send_to_discord(alert_message)
-    logging.info(f'Sent to Discord: {discord_response}')
+    return jsonify({"message": "Received JSON data and inserted into database"}), 200
 
 
 ########################################################
@@ -323,66 +366,10 @@ def delete_event():
         logging.error(f'Error processing DELETE request: {e}')
         return jsonify({"error": str(e)}), 500
 
+    # Default return, in case none of the above are executed
+    return jsonify({"error": "Unknown error occurred"}), 500
 
 
-
-########################################################
-# Send Discord Event for every event posted into this app
-# 
- #   discord_response = send_to_discord(alert_message)
- #   logging.info(f'Sent to Discord: {discord_response}')
-
-
-    # Send SMS using Twilio API
-    #client = Client(account_sid, auth_token)
-
-   # game = data['game']
- #   server = data['server']
- #   players = data['curplayers']
-#    alert_message = f'New game participant on Game: [{game}] running on Server: [{server}] with {players} players currently online.'
-
-    #message = client.messages.create(
-    #                          body=alert_message,
-    #                          from_=twilio_tn,
-    #                          to=failsafe_mt
-    #                      )
-
-
-    ########################################################
-    # find users who have opted in for alerts and send them SMS
-    # Connect to the SQLite database
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-
-    # Execute the SELECT query
-    cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
-    phone_numbers = cursor.fetchall()
-    #conn.close()
-
-    # Loop over the result set and send SMS notifications
-    for row in phone_numbers:
-        phone_number = row[0]
-        send_sms(phone_number, alert_message)
-        logging.info(f'Sent sms message to phone: {phone_number} ')
-
-
-    # Execute the SELECT query
-    cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='W'")
-    phone_numbers = cursor.fetchall()
-    conn.close()
-
-    # Loop over the result set and send SMS notifications
-    for row in phone_numbers:
-        phone_number = row[0]
-        send_whatsapp(phone_number, alert_message)
-        logging.info(f'Sent whatsapp message to phone: {phone_number} ')
-
-
-    conn.close()
-
-
-
-    return jsonify({"message": "Received JSON data and inserted into database"}), 200
 
 ########################################################
 ########################################################
@@ -418,6 +405,9 @@ def sms_errors():
     except Exception as e:
         # Handle exceptions
         return jsonify({"error": str(e)}), 500
+
+    # Default return, in case none of the above are executed
+    return jsonify({"error": "Unknown error occurred"}), 500
 
 ########################################################
 ########################################################
@@ -478,7 +468,7 @@ def twilio_sms():
             from_=mt,
             to=mo
         )
-        print(f'> SMS > Sent sms to {mo} with SID: {message.sid}')
+        logging.info(f'> SMS > Sent sms to {mo} with SID: {message.sid}')
 
 
     return jsonify({"message": "handled incoming message"}), 200
