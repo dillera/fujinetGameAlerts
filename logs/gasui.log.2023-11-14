@@ -1,0 +1,66 @@
+2023-11-21 00:11:14,390 [INFO] - The CSRF token is missing.
+2023-11-21 02:31:28,940 [INFO] - The CSRF token is missing.
+2023-11-21 02:53:26,827 [INFO] - The CSRF token is missing.
+2023-11-21 08:53:03,853 [INFO] - The CSRF token is missing.
+2023-11-21 10:02:00,091 [INFO] - The CSRF token is missing.
+2023-11-21 11:10:31,702 [INFO] - The CSRF token is missing.
+2023-11-21 14:58:21,316 [INFO] - The CSRF token is missing.
+2023-11-21 16:06:29,991 [INFO] - The CSRF token is missing.
+2023-11-21 20:30:36,736 [INFO] - The CSRF token is missing.
+2023-11-21 20:57:37,739 [INFO] - The CSRF token is missing.
+2023-11-21 21:55:49,410 [INFO] - The CSRF token is missing.
+2023-11-21 22:21:31,606 [INFO] - The CSRF token is missing.
+2023-11-22 00:09:30,839 [INFO] - The CSRF token is missing.
+2023-11-22 02:56:09,602 [INFO] - The CSRF token is missing.
+2023-11-22 04:02:40,819 [INFO] - The CSRF token is missing.
+2023-11-22 04:32:56,785 [INFO] - >in CONFIRM with code:033589
+2023-11-22 04:32:56,785 [INFO] - >in CONFIRM with user:(9, '+112159839558', '033589', None, 0, None, 'S', '2023-11-22 04:32:41.640917', None)
+2023-11-22 04:32:56,785 [INFO] - >in CONFIRM ...found the row:
+2023-11-22 04:32:56,785 [INFO] - >> user[1] = +112159839558
+2023-11-22 04:32:56,785 [INFO] - >> user[2] = 033589
+2023-11-22 04:32:56,785 [INFO] - >> user[3] = None
+2023-11-22 04:32:56,785 [INFO] - >> user[4] = 0
+2023-11-22 04:32:56,785 [INFO] - >> user[5] = None
+2023-11-22 04:32:56,785 [INFO] - >> user[6] = S
+2023-11-22 04:32:56,785 [INFO] - >> user[7] = 2023-11-22 04:32:41.640917
+2023-11-22 04:32:56,785 [INFO] - >in CONFIRM if true for  033589 = 033589
+2023-11-22 04:32:56,790 [INFO] - >in CONFIRM ...updated db and CONFIRMED +112159839558
+2023-11-22 04:33:14,277 [INFO] - > In / - TN:  +12159839558 - going to check if in db
+2023-11-22 04:33:14,280 [INFO] - > Got a new tn: +12159839558 not found in the DB, going to clean, add it....
+2023-11-22 04:33:14,280 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 04:33:14,280 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 04:33:14,280 [INFO] - Headers:
+2023-11-22 04:33:14,280 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 04:33:14,280 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 04:33:14,280 [INFO] - Accept-Charset : utf-8
+2023-11-22 04:33:14,280 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 04:33:14,280 [INFO] - Accept : application/json
+2023-11-22 04:33:14,280 [INFO] - -- END Twilio API Request --
+2023-11-22 04:33:14,548 [INFO] - Response Status Code: 201
+2023-11-22 04:33:14,548 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 04:33:14 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '797', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQcf8b5a0b8d128e3737d537461cb00eb9', 'Twilio-Request-Duration': '0.141', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 04:33:14,549 [INFO] - > transformed_phone tn: +112159839558
+2023-11-22 04:33:14,553 [INFO] - > sent first OTC and created row in users.db
+2023-11-22 04:33:14,572 [INFO] - >in /confirm_code route, calling confirm_code.html for code
+2023-11-22 04:33:26,585 [INFO] - >in CONFIRM with code:417663
+2023-11-22 04:33:26,585 [INFO] - >in CONFIRM with user:(10, '+112159839558', '417663', None, 0, None, 'S', '2023-11-22 04:33:14.277931', None)
+2023-11-22 04:33:26,585 [INFO] - >in CONFIRM ...found the row:
+2023-11-22 04:33:26,585 [INFO] - >> user[1] = +112159839558
+2023-11-22 04:33:26,585 [INFO] - >> user[2] = 417663
+2023-11-22 04:33:26,585 [INFO] - >> user[3] = None
+2023-11-22 04:33:26,585 [INFO] - >> user[4] = 0
+2023-11-22 04:33:26,585 [INFO] - >> user[5] = None
+2023-11-22 04:33:26,585 [INFO] - >> user[6] = S
+2023-11-22 04:33:26,585 [INFO] - >> user[7] = 2023-11-22 04:33:14.277931
+2023-11-22 04:33:26,585 [INFO] - >in CONFIRM if true for  417663 = 417663
+2023-11-22 04:33:26,589 [INFO] - >in CONFIRM ...updated db and CONFIRMED +112159839558
+2023-11-22 04:33:33,767 [INFO] - >loading dashboard for tn: None
+2023-11-22 04:33:33,768 [INFO] - >in /dashboard for phone: None
+2023-11-22 04:37:33,682 [INFO] - >loading dashboard for tn: None
+2023-11-22 04:37:33,683 [INFO] - >in /dashboard for phone: None
+2023-11-22 05:20:27,897 [INFO] - The CSRF token is missing.
+2023-11-22 06:02:42,383 [INFO] - The CSRF token is missing.
+2023-11-22 09:04:46,333 [INFO] - The CSRF token is missing.
+2023-11-22 11:52:00,810 [INFO] - The CSRF token is missing.
+2023-11-22 12:22:09,166 [INFO] - The CSRF token is missing.
+2023-11-22 13:08:35,005 [INFO] - The CSRF token is missing.
+2023-11-22 14:51:45,071 [INFO] - The CSRF token is missing.

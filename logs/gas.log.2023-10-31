@@ -1,0 +1,33 @@
+2023-11-20 20:58:00,108 [INFO] - > in /sms route, about to parse the twilio request....
+2023-11-20 20:58:00,110 [INFO] - SmsMessageSid: SM7ca6ab2ec3d17776c4645c6763659cdf
+2023-11-20 20:58:00,110 [INFO] - NumMedia: 0
+2023-11-20 20:58:00,110 [INFO] - ProfileName: ACD Galaxy
+2023-11-20 20:58:00,110 [INFO] - SmsSid: SM7ca6ab2ec3d17776c4645c6763659cdf
+2023-11-20 20:58:00,110 [INFO] - WaId: 12673033186
+2023-11-20 20:58:00,110 [INFO] - SmsStatus: received
+2023-11-20 20:58:00,110 [INFO] - Body: Hi
+2023-11-20 20:58:00,110 [INFO] - To: whatsapp:+17177166502
+2023-11-20 20:58:00,110 [INFO] - NumSegments: 1
+2023-11-20 20:58:00,110 [INFO] - ReferralNumMedia: 0
+2023-11-20 20:58:00,110 [INFO] - MessageSid: SM7ca6ab2ec3d17776c4645c6763659cdf
+2023-11-20 20:58:00,110 [INFO] - AccountSid: ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0
+2023-11-20 20:58:00,110 [INFO] - From: whatsapp:+12673033186
+2023-11-20 20:58:00,110 [INFO] - ApiVersion: 2010-04-01
+2023-11-20 20:58:00,110 [INFO] - > WA body is: >>Hi<< 
+2023-11-20 20:58:00,110 [INFO] - > WA mt is: >>whatsapp:+17177166502<< 
+2023-11-20 20:58:00,110 [INFO] - > WA mo is: >>whatsapp:+12673033186<< 
+2023-11-20 20:58:00,111 [INFO] - > WA >mo is whats app 
+2023-11-20 20:58:00,111 [INFO] - > WA >mo cleaned to: +12673033186 
+2023-11-20 20:58:00,111 [INFO] - > WA > about to send message to: whatsapp:+12673033186 
+2023-11-20 20:58:00,354 [INFO] - -- BEGIN Twilio API Request --
+2023-11-20 20:58:00,354 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-20 20:58:00,354 [INFO] - Headers:
+2023-11-20 20:58:00,354 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-20 20:58:00,354 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-20 20:58:00,354 [INFO] - Accept-Charset : utf-8
+2023-11-20 20:58:00,354 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-20 20:58:00,354 [INFO] - Accept : application/json
+2023-11-20 20:58:00,354 [INFO] - -- END Twilio API Request --
+2023-11-20 20:58:01,133 [INFO] - Response Status Code: 201
+2023-11-20 20:58:01,134 [INFO] - Response Headers: {'Date': 'Mon, 20 Nov 2023 20:58:01 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '831', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ1920ee89376fc2f9ce86aa6b5cf969b0', 'Twilio-Request-Duration': '0.110', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-20 20:58:01,134 [INFO] - > WA > Sent whatsapp message: There are currently 42 rows in the event database. to number whatsapp:+12673033186 

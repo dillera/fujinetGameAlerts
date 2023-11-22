@@ -7,16 +7,14 @@
 # Andy Diller / dillera / 10/2023
 #
 from flask import Flask, request, jsonify, g
-import sqlite3, os, logging
+import sqlite3, os, logging, requests
 from twilio.rest import Client
-from dotenv import load_dotenv
 from datetime import datetime
-import requests
-import logging
 from logging.handlers import TimedRotatingFileHandler
+from urllib.parse import urlparse, parse_qs
+
 
 app = Flask(__name__)
-
 
 # Initialize Twilio client
 account_sid = os.getenv('TWILIO_ACCT_SID')
@@ -24,7 +22,7 @@ auth_token  = os.getenv('TWILIO_AUTH_TOKEN')
 twilio_tn   = os.getenv('TWILIO_TN')
 webhook_url = os.getenv('DISCORD_WEBHOOK')
 working_dir = os.getenv('WORKING_DIRECTORY')
-set_debug     = False
+set_debug     = True
 set_port      = '5100'
 type_sms      = 'S'
 type_whatsapp = 'W'
@@ -83,6 +81,7 @@ cursor.execute('''
     CREATE TABLE IF NOT EXISTS gameEvents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created, DATETIME,
+        event_type, TEXT,
         game TEXT,
         appkey INTEGER,
         server TEXT,
@@ -94,6 +93,29 @@ cursor.execute('''
     )
 ''')
 conn.commit()
+
+
+## Create SQLite database connection
+
+conn = sqlite3.connect('smsErrors.db')
+cursor = conn.cursor()
+
+# Create gameEvents table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS smsErrors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME,
+        resource_sid TEXT,
+        service_sid TEXT,
+        error_code TEXT,
+        error_message TEXT,
+        callback_url TEXT,
+        request_method TEXT,
+        error_details TEXT
+    )
+''')
+conn.commit()
+
 
 # add or remove whatsapp prefix to TNs
 def toggle_whatsapp_prefix(input_string):
@@ -158,13 +180,26 @@ def send_whatsapp(to, body):
         print(f"Error sending SMS to {to}: {e}")
 
 
+def extract_url_and_table_param(url):
+    parsed_url = urlparse(url)
+    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+    
+    query_params = parse_qs(parsed_url.query)
+    table_param = query_params.get('table', [None])[0]
+
+    return base_url, table_param
+
+
+
 ########################################################
 ########################################################
 ########################################################
-# Route for incoming JSON POST
+# Route for incoming SERVER update
 #
 @app.route('/game', methods=['POST'])
+
 def json_post():
+    logging.info(f">> In POST for /game ")
     current_datetime = datetime.now()
 
     try:
@@ -173,31 +208,93 @@ def json_post():
         # Log the request data
         logging.info(f'Received JSON data: {data}')
 
+        curplayers = data['curplayers']
+        game_name = data['game']
+        serverurl = data['serverurl']
+        logging.error(f'> Data in this post is: currentplayers:{curplayers} game_name:{game_name}, serverurl:{serverurl}  ')
+
         # Insert data into the database
         db = get_db()
         cursor = db.cursor()
         cursor.execute('''
-            INSERT INTO gameEvents (created, game, appkey, server, region, serverurl, status, maxplayers, curplayers)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO gameEvents (created, game, appkey, server, region, serverurl, status, maxplayers, curplayers, event_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             current_datetime, data['game'], data['appkey'], data['server'], data['region'], 
-            data['serverurl'], data['status'], data['maxplayers'], data['curplayers']
+            data['serverurl'], data['status'], data['maxplayers'], data['curplayers'], 'POST'
         ))
-        db.commit()
 
     except Exception as e:
         # Log any exceptions
         logging.error(f'Error processing JSON data: {e}')
         return jsonify({"error": str(e)}), 400
 
+    base_url, table_param = extract_url_and_table_param(serverurl)
+
+    if curplayers == 0:
+        alert_message = f'🌐 Server event- GameServer: [{base_url}] running {table_param} has 0 players currently.'
+    else:
+        alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} players currently online.'
+
+    discord_response = send_to_discord(alert_message)
+    logging.info(f'Sent to Discord: {discord_response}')
+
+
+########################################################
+# Route for incoming DELETE server
+#
+@app.route('/game', methods=['DELETE'])
+
+def delete_event():
+    logging.info(f">> In DELETE for /game ")
+    try:
+        data = request.get_json()
+        serverurl = data.get('serverurl')
+
+        # Validate serverurl
+        if not serverurl:
+            return jsonify({"error": "serverurl is required"}), 400
+
+        current_datetime = datetime.now()
+
+        # Insert 'DELETE' event into the database
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('''
+            INSERT INTO gameEvents (created, serverurl, event_type)
+            VALUES (?, ?, ?)
+        ''', (current_datetime, serverurl, 'DELETE'))
+        db.commit()
+
+        base_url, table_param = extract_url_and_table_param(serverurl)
+
+        alert_message = f'🌐 Server event - GameServer: [{base_url}] running game [{table_param}] has been deleted from Lobby.'
+        discord_response = send_to_discord(alert_message)
+        logging.info(f'Sent to Discord: {discord_response}')
+
+        return jsonify({"message": f"'DELETE' event added for serverurl {serverurl}"}), 200
+
+    except Exception as e:
+        logging.error(f'Error processing DELETE request: {e}')
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+########################################################
+# Send Discord Event for every event posted into this app
+# 
+ #   discord_response = send_to_discord(alert_message)
+ #   logging.info(f'Sent to Discord: {discord_response}')
+
 
     # Send SMS using Twilio API
     #client = Client(account_sid, auth_token)
 
-    game = data['game']
-    server = data['server']
-    players = data['curplayers']
-    alert_message = f'New game participant on Game: [{game}] running on Server: [{server}] with {players} players currently online.'
+   # game = data['game']
+ #   server = data['server']
+ #   players = data['curplayers']
+#    alert_message = f'New game participant on Game: [{game}] running on Server: [{server}] with {players} players currently online.'
 
     #message = client.messages.create(
     #                          body=alert_message,
@@ -239,24 +336,52 @@ def json_post():
     conn.close()
 
 
-    ########################################################
-    # Send Discord Event for every event posted into this app
-    # 
-    discord_response = send_to_discord(alert_message)
-    logging.info(f'Sent to Discord: {discord_response}')
-     # ... (rest of the code remains the same)
 
     return jsonify({"message": "Received JSON data and inserted into database"}), 200
 
+########################################################
+########################################################
+# Route for Twili SMS errors
+#
+@app.route('/sms/errors', methods=['POST'])
 
+def sms_errors():
+    logging.info(f">> In POST for /sms/errors ")
+    try:
+        data = request.get_json()
+        timestamp = datetime.now()
+
+        # Extracting necessary data from the payload
+        resource_sid = data.get('resource_sid', '')
+        service_sid = data.get('service_sid', '')
+        error_code = data.get('error_code', '')
+        error_message = data.get('more_info', {}).get('Msg', '')
+        callback_url = data.get('webhook', {}).get('request', {}).get('url', '')
+        request_method = data.get('webhook', {}).get('request', {}).get('method', '')
+
+        # Insert data into the database
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('''
+            INSERT INTO smsErrors (timestamp, resource_sid, service_sid, error_code, error_message, callback_url, request_method, error_details)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (timestamp, resource_sid, service_sid, error_code, error_message, callback_url, request_method, json.dumps(data)))
+        db.commit()
+
+        return jsonify({"message": "Error data stored successfully"}), 200
+
+    except Exception as e:
+        # Handle exceptions
+        return jsonify({"error": str(e)}), 500
 
 ########################################################
 ########################################################
 # Route for Twilio SMS
 #
 @app.route('/sms', methods=['POST'])
+
 def twilio_sms():
-    logging.info(f'> in /sms route, about to parse the twilio request....')
+    logging.info(f">> In POST for /sms ")
 
    # Log all incoming POST parameters from Twilio
     for key, value in request.form.items():

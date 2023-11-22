@@ -92,7 +92,7 @@ Environment="TWILIO_TN=${TWILIO_TN}"
 Environment="FA_SECRET_KEY=${FA_SECRET_KEY}"
 Environment="DISCORD_WEBHOOK=${DISCORD_WEBHOOK}"
 
-ExecStart=${PYTHON_ENV_PATH}/bin/gunicorn -w 4 -b 0.0.0.0:${PORT_NUMBER} ${SERVICE_NAME}:app
+ExecStart=${PYTHON_ENV_PATH}/bin/gunicorn -w 2 -b 0.0.0.0:${PORT_NUMBER} ${SERVICE_NAME}:app
 Restart=always
 
 [Install]

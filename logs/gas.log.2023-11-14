@@ -1,0 +1,270 @@
+2023-11-21 15:05:30,670 [INFO] - Received JSON data: {'game': 'TestGameACD1', 'appkey': 2, 'server': 'QA Lobby1', 'region': 'us', 'serverurl': 'https://fgs.qa.6502.fun/?table=NORM&count=2', 'status': 'online', 'maxplayers': 8, 'curplayers': 2, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}, {'platform': 'spectrum', 'url': 'TNFS://ec.tnfs.io/spectrum/5card.xex'}]}
+2023-11-21 15:05:30,675 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 15:05:30,675 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 15:05:30,676 [INFO] - Headers:
+2023-11-21 15:05:30,676 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 15:05:30,676 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 15:05:30,676 [INFO] - Accept-Charset : utf-8
+2023-11-21 15:05:30,676 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 15:05:30,676 [INFO] - Accept : application/json
+2023-11-21 15:05:30,676 [INFO] - -- END Twilio API Request --
+2023-11-21 15:05:30,956 [INFO] - Response Status Code: 201
+2023-11-21 15:05:30,956 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 15:05:30 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '872', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ0a2100f7dd5e8b37abe14bc286bf1060', 'Twilio-Request-Duration': '0.140', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 15:05:30,956 [INFO] - > Sent SMS event message: SM0a2100f7dd5e8b37abe14bc286bf1060 to: +12676784059 
+2023-11-21 15:05:30,957 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-21 15:05:30,957 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 15:05:30,957 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 15:05:30,957 [INFO] - Headers:
+2023-11-21 15:05:30,957 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 15:05:30,957 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 15:05:30,957 [INFO] - Accept-Charset : utf-8
+2023-11-21 15:05:30,957 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 15:05:30,957 [INFO] - Accept : application/json
+2023-11-21 15:05:30,957 [INFO] - -- END Twilio API Request --
+2023-11-21 15:05:31,075 [INFO] - Response Status Code: 201
+2023-11-21 15:05:31,075 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 15:05:31 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '889', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ60674ab0c98db8f4912db7bd73b1c7e1', 'Twilio-Request-Duration': '0.101', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 15:05:31,076 [INFO] - > Sent whatsapp event message: SM60674ab0c98db8f4912db7bd73b1c7e1 to: +12673033186 
+2023-11-21 15:05:31,076 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-21 15:05:31,076 [INFO] - in send_to_discord with message: New game participant on Game: [TestGameACD1] running on Server: [QA Lobby1] with 2 players currently online.
+2023-11-21 15:05:31,076 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-21 15:05:33,180 [INFO] - Sent to Discord: <Response [204]>
+2023-11-21 15:10:21,165 [INFO] - Received JSON data: {'game': 'TestGameACD1', 'appkey': 2, 'server': 'QA Lobby1', 'region': 'us', 'serverurl': 'https://fgs.qa.6502.fun/?table=NORM&count=2', 'status': 'online', 'maxplayers': 8, 'curplayers': 2, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}, {'platform': 'spectrum', 'url': 'TNFS://ec.tnfs.io/spectrum/5card.xex'}]}
+2023-11-21 15:10:21,169 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 15:10:21,169 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 15:10:21,169 [INFO] - Headers:
+2023-11-21 15:10:21,169 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 15:10:21,170 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 15:10:21,170 [INFO] - Accept-Charset : utf-8
+2023-11-21 15:10:21,170 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 15:10:21,170 [INFO] - Accept : application/json
+2023-11-21 15:10:21,170 [INFO] - -- END Twilio API Request --
+2023-11-21 15:10:21,416 [INFO] - Response Status Code: 201
+2023-11-21 15:10:21,416 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 15:10:21 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '872', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQc45f5c8c03b765e3b9bd31907d9530f7', 'Twilio-Request-Duration': '0.133', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 15:10:21,416 [INFO] - > Sent SMS event message: SMc45f5c8c03b765e3b9bd31907d9530f7 to: +12676784059 
+2023-11-21 15:10:21,416 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-21 15:10:21,417 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 15:10:21,417 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 15:10:21,417 [INFO] - Headers:
+2023-11-21 15:10:21,417 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 15:10:21,417 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 15:10:21,417 [INFO] - Accept-Charset : utf-8
+2023-11-21 15:10:21,417 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 15:10:21,417 [INFO] - Accept : application/json
+2023-11-21 15:10:21,417 [INFO] - -- END Twilio API Request --
+2023-11-21 15:10:21,541 [INFO] - Response Status Code: 201
+2023-11-21 15:10:21,542 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 15:10:21 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '889', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ2ac492799aea9a060810b0d3feef1934', 'Twilio-Request-Duration': '0.105', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 15:10:21,542 [INFO] - > Sent whatsapp event message: SM2ac492799aea9a060810b0d3feef1934 to: +12673033186 
+2023-11-21 15:10:21,542 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-21 15:10:21,542 [INFO] - in send_to_discord with message: New game participant on Game: [TestGameACD1] running on Server: [QA Lobby1] with 2 players currently online.
+2023-11-21 15:10:21,542 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-21 15:10:21,977 [INFO] - Sent to Discord: <Response [204]>
+2023-11-21 19:52:04,143 [INFO] - Received JSON data: {'game': '5card-Prod', 'appkey': 2, 'server': 'QAL-5CSp', 'region': 'us', 'serverurl': 'https://5card.carr-designs.com/?table=NORM&count=2', 'status': 'online', 'maxplayers': 8, 'curplayers': 4, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}, {'platform': 'spectrum', 'url': 'TNFS://ec.tnfs.io/spectrum/5card.xex'}]}
+2023-11-21 19:52:04,149 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 19:52:04,149 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 19:52:04,149 [INFO] - Headers:
+2023-11-21 19:52:04,149 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 19:52:04,149 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 19:52:04,150 [INFO] - Accept-Charset : utf-8
+2023-11-21 19:52:04,150 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 19:52:04,150 [INFO] - Accept : application/json
+2023-11-21 19:52:04,150 [INFO] - -- END Twilio API Request --
+2023-11-21 19:52:04,478 [INFO] - Response Status Code: 201
+2023-11-21 19:52:04,478 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 19:52:04 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '869', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ817e3745c8d663ac74181ae6dc36f7db', 'Twilio-Request-Duration': '0.142', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 19:52:04,478 [INFO] - > Sent SMS event message: SM817e3745c8d663ac74181ae6dc36f7db to: +12676784059 
+2023-11-21 19:52:04,478 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-21 19:52:04,479 [INFO] - -- BEGIN Twilio API Request --
+2023-11-21 19:52:04,479 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-21 19:52:04,479 [INFO] - Headers:
+2023-11-21 19:52:04,479 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-21 19:52:04,479 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-21 19:52:04,479 [INFO] - Accept-Charset : utf-8
+2023-11-21 19:52:04,479 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-21 19:52:04,479 [INFO] - Accept : application/json
+2023-11-21 19:52:04,479 [INFO] - -- END Twilio API Request --
+2023-11-21 19:52:04,609 [INFO] - Response Status Code: 201
+2023-11-21 19:52:04,609 [INFO] - Response Headers: {'Date': 'Tue, 21 Nov 2023 19:52:04 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '886', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQb44b59d25f067581657f097135532653', 'Twilio-Request-Duration': '0.110', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-21 19:52:04,609 [INFO] - > Sent whatsapp event message: SMb44b59d25f067581657f097135532653 to: +12673033186 
+2023-11-21 19:52:04,609 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-21 19:52:04,610 [INFO] - in send_to_discord with message: New game participant on Game: [5card-Prod] running on Server: [QAL-5CSp] with 4 players currently online.
+2023-11-21 19:52:04,610 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-21 19:52:04,902 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:28:28,739 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'QA Red Room   - 2 bots', 'region': 'us', 'serverurl': 'http://lobby-qa.6502.fun:8081/?table=red', 'status': 'online', 'maxplayers': 6, 'curplayers': 0, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:28:28,756 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:28:28,757 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:28:28,759 [INFO] - Headers:
+2023-11-22 03:28:28,761 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:28:28,762 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:28:28,762 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:28:28,766 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:28:28,766 [INFO] - Accept : application/json
+2023-11-22 03:28:28,766 [INFO] - -- END Twilio API Request --
+2023-11-22 03:28:29,098 [INFO] - Response Status Code: 201
+2023-11-22 03:28:29,098 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:28:29 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '884', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQb2883fe3183ec02689d729502b970e55', 'Twilio-Request-Duration': '0.140', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '2', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:28:29,098 [INFO] - > Sent SMS event message: SMb2883fe3183ec02689d729502b970e55 to: +12676784059 
+2023-11-22 03:28:29,098 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:28:29,099 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:28:29,099 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:28:29,099 [INFO] - Headers:
+2023-11-22 03:28:29,099 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:28:29,099 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:28:29,099 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:28:29,099 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:28:29,099 [INFO] - Accept : application/json
+2023-11-22 03:28:29,099 [INFO] - -- END Twilio API Request --
+2023-11-22 03:28:29,229 [INFO] - Response Status Code: 201
+2023-11-22 03:28:29,229 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:28:29 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '901', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ59cc51c48661a94ac13caf4bafad12ed', 'Twilio-Request-Duration': '0.108', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '2', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:28:29,231 [INFO] - > Sent whatsapp event message: SM59cc51c48661a94ac13caf4bafad12ed to: +12673033186 
+2023-11-22 03:28:29,231 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:28:29,231 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [QA Red Room   - 2 bots] with 0 players currently online.
+2023-11-22 03:28:29,232 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:28:30,700 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:28:30,705 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'The Basement', 'region': 'us', 'serverurl': 'http://lobby-qa.6502.fun:8081/?table=basement', 'status': 'online', 'maxplayers': 8, 'curplayers': 0, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:28:30,712 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:28:30,712 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:28:30,712 [INFO] - Headers:
+2023-11-22 03:28:30,712 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:28:30,712 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:28:30,712 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:28:30,712 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:28:30,712 [INFO] - Accept : application/json
+2023-11-22 03:28:30,712 [INFO] - -- END Twilio API Request --
+2023-11-22 03:28:30,860 [INFO] - Response Status Code: 201
+2023-11-22 03:28:30,860 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:28:30 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '874', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ904d25000b41cf8e00bdca253202146c', 'Twilio-Request-Duration': '0.128', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:28:30,861 [INFO] - > Sent SMS event message: SM904d25000b41cf8e00bdca253202146c to: +12676784059 
+2023-11-22 03:28:30,861 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:28:30,861 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:28:30,861 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:28:30,861 [INFO] - Headers:
+2023-11-22 03:28:30,861 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:28:30,861 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:28:30,861 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:28:30,861 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:28:30,862 [INFO] - Accept : application/json
+2023-11-22 03:28:30,862 [INFO] - -- END Twilio API Request --
+2023-11-22 03:28:30,988 [INFO] - Response Status Code: 201
+2023-11-22 03:28:30,988 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:28:30 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '891', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQe257d32f92ba08e6cdb71eabba49eb4a', 'Twilio-Request-Duration': '0.106', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:28:30,988 [INFO] - > Sent whatsapp event message: SMe257d32f92ba08e6cdb71eabba49eb4a to: +12673033186 
+2023-11-22 03:28:30,988 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:28:30,988 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [The Basement] with 0 players currently online.
+2023-11-22 03:28:30,989 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:28:31,326 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:32:23,753 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'QA Red Room   - 2 bots', 'region': 'us', 'serverurl': 'http://fgs.qa.6502.fun:8081/?table=red', 'status': 'online', 'maxplayers': 6, 'curplayers': 0, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:32:23,762 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:32:23,762 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:32:23,762 [INFO] - Headers:
+2023-11-22 03:32:23,763 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:32:23,763 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:32:23,763 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:32:23,763 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:32:23,763 [INFO] - Accept : application/json
+2023-11-22 03:32:23,763 [INFO] - -- END Twilio API Request --
+2023-11-22 03:32:24,029 [INFO] - Response Status Code: 201
+2023-11-22 03:32:24,029 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:32:24 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '884', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ9099fe099f2e3aa592c0e289ce1fc5f8', 'Twilio-Request-Duration': '0.126', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '2', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:32:24,029 [INFO] - > Sent SMS event message: SM9099fe099f2e3aa592c0e289ce1fc5f8 to: +12676784059 
+2023-11-22 03:32:24,029 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:32:24,030 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:32:24,030 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:32:24,030 [INFO] - Headers:
+2023-11-22 03:32:24,030 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:32:24,030 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:32:24,030 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:32:24,030 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:32:24,030 [INFO] - Accept : application/json
+2023-11-22 03:32:24,030 [INFO] - -- END Twilio API Request --
+2023-11-22 03:32:24,157 [INFO] - Response Status Code: 201
+2023-11-22 03:32:24,158 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:32:24 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '901', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQd6f7a847eb1bc99bf8cb951a36ca4a53', 'Twilio-Request-Duration': '0.100', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '2', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:32:24,158 [INFO] - > Sent whatsapp event message: SMd6f7a847eb1bc99bf8cb951a36ca4a53 to: +12673033186 
+2023-11-22 03:32:24,159 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:32:24,160 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [QA Red Room   - 2 bots] with 0 players currently online.
+2023-11-22 03:32:24,160 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:32:24,722 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:32:24,725 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'The Basement', 'region': 'us', 'serverurl': 'http://fgs.qa.6502.fun:8081/?table=basement', 'status': 'online', 'maxplayers': 8, 'curplayers': 0, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:32:24,735 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:32:24,735 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:32:24,735 [INFO] - Headers:
+2023-11-22 03:32:24,735 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:32:24,735 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:32:24,735 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:32:24,735 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:32:24,735 [INFO] - Accept : application/json
+2023-11-22 03:32:24,735 [INFO] - -- END Twilio API Request --
+2023-11-22 03:32:24,878 [INFO] - Response Status Code: 201
+2023-11-22 03:32:24,878 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:32:24 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '874', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ0e29fead76bdc78ef1ee49351e75aa27', 'Twilio-Request-Duration': '0.124', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:32:24,878 [INFO] - > Sent SMS event message: SM0e29fead76bdc78ef1ee49351e75aa27 to: +12676784059 
+2023-11-22 03:32:24,878 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:32:24,879 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:32:24,879 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:32:24,879 [INFO] - Headers:
+2023-11-22 03:32:24,879 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:32:24,879 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:32:24,879 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:32:24,879 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:32:24,879 [INFO] - Accept : application/json
+2023-11-22 03:32:24,879 [INFO] - -- END Twilio API Request --
+2023-11-22 03:32:25,004 [INFO] - Response Status Code: 201
+2023-11-22 03:32:25,004 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:32:25 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '891', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ8e082a8817e5958110ff0961350e6f16', 'Twilio-Request-Duration': '0.105', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:32:25,004 [INFO] - > Sent whatsapp event message: SM8e082a8817e5958110ff0961350e6f16 to: +12673033186 
+2023-11-22 03:32:25,004 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:32:25,004 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [The Basement] with 0 players currently online.
+2023-11-22 03:32:25,004 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:32:25,303 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:33:54,717 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'QA Blue Room  - 4 bots', 'region': 'us', 'serverurl': 'http://fgs.qa.6502.fun:8081/?table=blue', 'status': 'online', 'maxplayers': 4, 'curplayers': 1, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:33:54,723 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:33:54,723 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:33:54,723 [INFO] - Headers:
+2023-11-22 03:33:54,723 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:33:54,723 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:33:54,723 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:33:54,723 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:33:54,723 [INFO] - Accept : application/json
+2023-11-22 03:33:54,723 [INFO] - -- END Twilio API Request --
+2023-11-22 03:33:55,061 [INFO] - Response Status Code: 201
+2023-11-22 03:33:55,061 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:33:55 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '884', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ086f0a7d1d5ea8018a105ea674e7ec45', 'Twilio-Request-Duration': '0.156', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:33:55,061 [INFO] - > Sent SMS event message: SM086f0a7d1d5ea8018a105ea674e7ec45 to: +12676784059 
+2023-11-22 03:33:55,061 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:33:55,062 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:33:55,062 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:33:55,062 [INFO] - Headers:
+2023-11-22 03:33:55,062 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:33:55,062 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:33:55,062 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:33:55,062 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:33:55,062 [INFO] - Accept : application/json
+2023-11-22 03:33:55,062 [INFO] - -- END Twilio API Request --
+2023-11-22 03:33:55,157 [INFO] - Response Status Code: 201
+2023-11-22 03:33:55,157 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:33:55 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '901', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQd6595c4ee3881ecc41ad88e5d5941b2a', 'Twilio-Request-Duration': '0.077', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:33:55,157 [INFO] - > Sent whatsapp event message: SMd6595c4ee3881ecc41ad88e5d5941b2a to: +12673033186 
+2023-11-22 03:33:55,157 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:33:55,157 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [QA Blue Room  - 4 bots] with 1 players currently online.
+2023-11-22 03:33:55,157 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:33:55,527 [INFO] - Sent to Discord: <Response [204]>
+2023-11-22 03:54:52,357 [INFO] - Received JSON data: {'game': '5 Card Stud', 'appkey': 1, 'server': 'The Basement', 'region': 'us', 'serverurl': 'http://fgs.qa.6502.fun:8081/?table=basement', 'status': 'online', 'maxplayers': 8, 'curplayers': 0, 'clients': [{'platform': 'atari', 'url': 'TNFS://ec.tnfs.io/atari/5card.xex'}]}
+2023-11-22 03:54:52,362 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:54:52,362 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:54:52,362 [INFO] - Headers:
+2023-11-22 03:54:52,362 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:54:52,362 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:54:52,362 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:54:52,362 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:54:52,362 [INFO] - Accept : application/json
+2023-11-22 03:54:52,362 [INFO] - -- END Twilio API Request --
+2023-11-22 03:54:52,621 [INFO] - Response Status Code: 201
+2023-11-22 03:54:52,621 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:54:52 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '874', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQb835625368c6d45db4260a2dfae6f706', 'Twilio-Request-Duration': '0.118', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:54:52,622 [INFO] - > Sent SMS event message: SMb835625368c6d45db4260a2dfae6f706 to: +12676784059 
+2023-11-22 03:54:52,622 [INFO] - Sent sms message to phone: +12676784059 
+2023-11-22 03:54:52,622 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 03:54:52,622 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 03:54:52,622 [INFO] - Headers:
+2023-11-22 03:54:52,622 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 03:54:52,622 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 03:54:52,622 [INFO] - Accept-Charset : utf-8
+2023-11-22 03:54:52,622 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 03:54:52,622 [INFO] - Accept : application/json
+2023-11-22 03:54:52,623 [INFO] - -- END Twilio API Request --
+2023-11-22 03:54:52,714 [INFO] - Response Status Code: 201
+2023-11-22 03:54:52,715 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 03:54:52 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '891', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQfe9f51f05134d0bd0d242b2de11ba1f3', 'Twilio-Request-Duration': '0.073', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 03:54:52,715 [INFO] - > Sent whatsapp event message: SMfe9f51f05134d0bd0d242b2de11ba1f3 to: +12673033186 
+2023-11-22 03:54:52,715 [INFO] - Sent whatsapp message to phone: +12673033186 
+2023-11-22 03:54:52,715 [INFO] - in send_to_discord with message: New game participant on Game: [5 Card Stud] running on Server: [The Basement] with 0 players currently online.
+2023-11-22 03:54:52,715 [INFO] - target url: https://discord.com/api/webhooks/1163526570414194788/GmSss6DReICLfJsvGWa1CstpbZK6RbTKuGYpDuGArI8hWMp5S8xHYen-jQoS51ZdOuRh
+2023-11-22 03:54:53,023 [INFO] - Sent to Discord: <Response [204]>
