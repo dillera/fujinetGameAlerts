@@ -93,14 +93,11 @@ cursor.execute('''
     )
 ''')
 conn.commit()
-
+conn.close()
 
 ## Create SQLite database connection
-
 conn = sqlite3.connect('smsErrors.db')
 cursor = conn.cursor()
-
-# Create gameEvents table if it doesn't exist
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS smsErrors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,6 +112,23 @@ cursor.execute('''
     )
 ''')
 conn.commit()
+conn.close()
+
+## Create SQLite database connection
+conn = sqlite3.connect('playerTracking.db')
+cursor = conn.cursor()
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS playerTracking (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game TEXT UNIQUE,
+        curplayers INTEGER,
+        total_players INTEGER DEFAULT 0,
+        created DATETIME
+    )
+''')
+conn.commit()
+conn.close()
+
 
 
 # add or remove whatsapp prefix to TNs
@@ -213,9 +227,10 @@ def json_post():
         serverurl = data['serverurl']
         logging.error(f'> Data in this post is: currentplayers:{curplayers} game_name:{game_name}, serverurl:{serverurl}  ')
 
-        # Insert data into the database
-        db = get_db()
-        cursor = db.cursor()
+########################################################
+        # Insert data into the gameEvents database
+        conn = sqlite3.connect('gameEvents.db')
+        cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO gameEvents (created, game, appkey, server, region, serverurl, status, maxplayers, curplayers, event_type)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -223,18 +238,48 @@ def json_post():
             current_datetime, data['game'], data['appkey'], data['server'], data['region'], 
             data['serverurl'], data['status'], data['maxplayers'], data['curplayers'], 'POST'
         ))
+        conn.commit()
+        logging.info(f">> committed update for gameEvents ")
+        conn.close()
+
+########################################################
+    # When a new game is POSTed, a new row is inserted with total_players initialized to 1.
+    # When an existing game is POSTed, the total_players is incremented by 1.
+    # This setup will ensure that each POST request for a game will either create a new record 
+    # with a total_players count of 1 or update an existing record by incrementing the total_players count. 
+
+        # Logic for playerTracking
+        # Check if the game already exists in playerTracking
+        conn = sqlite3.connect('playerTracking.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, total_players FROM playerTracking WHERE game = ?", (data['game'],))
+        game_record = cursor.fetchone()
+
+        if game_record:
+            # Update curplayers and increment total_players if game exists
+            new_total_players = game_record[1] + 1
+            cursor.execute("UPDATE playerTracking SET curplayers = ?, total_players = ? WHERE game = ?", (data['curplayers'], new_total_players, data['game']))
+        else:
+            # Insert new row if game does not exist
+            cursor.execute("INSERT INTO playerTracking (game, curplayers, created, total_players) VALUES (?, ?, ?, 1)", (data['game'], data['curplayers'], datetime.now()))
+
+        conn.commit()
+        logging.info(f">> committed update forplayerTracking ")
+        conn.close()
 
     except Exception as e:
         # Log any exceptions
         logging.error(f'Error processing JSON data: {e}')
         return jsonify({"error": str(e)}), 400
 
+
+
     base_url, table_param = extract_url_and_table_param(serverurl)
 
     if curplayers == 0:
-        alert_message = f'🌐 Server event- GameServer: [{base_url}] running {table_param} has 0 players currently.'
+        alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
     else:
-        alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} players currently online.'
+        alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
 
     discord_response = send_to_discord(alert_message)
     logging.info(f'Sent to Discord: {discord_response}')
