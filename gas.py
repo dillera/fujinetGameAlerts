@@ -9,7 +9,7 @@
 from flask import Flask, request, jsonify, g
 import sqlite3, os, logging, requests
 from twilio.rest import Client
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -114,7 +114,7 @@ cursor.execute('''
 conn.commit()
 conn.close()
 
-## Create SQLite database connection
+## Create playerTracking
 conn = sqlite3.connect('playerTracking.db')
 cursor = conn.cursor()
 cursor.execute('''
@@ -129,6 +129,24 @@ cursor.execute('''
 conn.commit()
 conn.close()
 
+## Create playerTracking
+conn = sqlite3.connect('serverTracking.db')
+cursor = conn.cursor()
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS serverTracking (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created DATETIME,
+        serverurl TEXT,
+        currentplayers INTEGER,
+        total_updates INTEGER DEFAULT 0
+    )
+''')
+conn.commit()
+conn.close()
+
+
+########################################################
+########################################################
 
 
 # add or remove whatsapp prefix to TNs
@@ -240,7 +258,7 @@ def json_post():
         ))
         conn.commit()
         logging.info(f">> committed update for gameEvents ")
-        conn.close()
+        #conn.close()
 
 ########################################################
     # When a new game is POSTed, a new row is inserted with total_players initialized to 1.
@@ -264,59 +282,149 @@ def json_post():
             cursor.execute("INSERT INTO playerTracking (game, curplayers, created, total_players) VALUES (?, ?, ?, 1)", (data['game'], data['curplayers'], datetime.now()))
 
         conn.commit()
-        logging.info(f">> committed update forplayerTracking ")
-        conn.close()
+        logging.info(f">> committed update for playerTracking ")
+        # conn.close()
 
  
+########################################################
+    # When a new game is POSTed, a new row is inserted with total_players initialized to 1.
+    # When an existing game is POSTed, the total_players is incremented by 1.
+    # This setup will ensure that each POST request for a game will either create a new record 
+    # with a total_players count of 1 or update an existing record by incrementing the total_players count. 
 
+
+
+
+
+        # Get the base url and the table name from the serverurl
         base_url, table_param = extract_url_and_table_param(serverurl)
+        logging.info(f">>> extracted table name {table_param} for server {base_url} ") 
 
-        if curplayers == 0:
-            alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
-        else:
-            alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
-
-########################################################
-        ########################################################
-        # Send Discord event message to game-alert-system
-
-        discord_response = send_to_discord(alert_message)
-        logging.info(f'Sent to Discord: {discord_response}')
-
-
-########################################################
-        ########################################################
-        # find users who have opted in for alerts and send them SMS
-        # Connect to the SQLite database
-        conn = sqlite3.connect('users.db')
+        logging.info(f">> open db connection for serverTracking ") 
+        conn = sqlite3.connect('serverTracking.db')
         cursor = conn.cursor()
 
 
-        # SEND SMS
-        # Execute the SELECT query
-        cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
-        phone_numbers = cursor.fetchall()
-        #conn.close()
 
-        # Loop over the result set and send SMS notifications
-        for row in phone_numbers:
-            phone_number = row[0]
-            send_sms(phone_number, alert_message)
-            logging.info(f'Sent sms message to phone: {phone_number} ')
+        # This could be a server message that all players have left, or it could be a
+        # server 'sync' message sent every 10min in order to clean up abandoned clients
+        # that didn't cleanly leave the server. Figure out which by looking at the row
+        # in serverTracking to see if the last update to it had any value except 0.
+        #
+        # If it's 0 we know it's just another sync and so don't send anything.
+        # if it's not 0 then that was the last player leaving the server so send an update.
+
+        if curplayers == 0:
+            logging.info(f">> curplayers for this request is {curplayers}, need to eval server sync... ") 
+
+            # Check the creation_time and currentplayers for the serverurl in serverTracking
+            cursor.execute("SELECT created, currentplayers FROM serverTracking WHERE serverurl = ?", (serverurl,))
+            result = cursor.fetchone()
+
+            if result:
+                logging.info(f">> found row in serverTracking: created: {result[0]} and currentplayers: {result[1]} ") 
+                creation_time = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S.%f')
+                current_players_in_db = result[1]
+               
+                if datetime.now() - creation_time < timedelta(hours=24) or current_players_in_db != 0:
+                    logging.info(f"> if: setting alert_message to none ") 
+                    alert_message = None
+                else:
+                    logging.info(f"> if/else: setting alert message to server event ")
+                    alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
+            else:
+                # No record found, perhaps send the message or handle as needed
+                logging.info(f">> No record found in serverTracking ") 
+                alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
+
+        # this is a player event so send a message
+        else:
+            logging.info(f">> curplayers for this request is {curplayers}, create alert_message ") 
+            alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
 
 
-        # SEND WHATSAPP
-        # Execute the SELECT query
-        cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='W'")
-        phone_numbers = cursor.fetchall()
+
+# now that we've decided to send the message or not go ahead and update the serverTracking db for this event.
+
+        # Logic for serverTracking
+        #logging.info(f">> About to eval curplayers for serverTracking ") 
+        #if data['curplayers'] == 0:
+
+
+        logging.info(f">> Heading into  servertracking.... ") 
+
+        # Check if the server URL already exists in serverUpdates
+        cursor.execute("SELECT id, total_updates FROM serverTracking WHERE serverurl = ?", (data['serverurl'],))
+        server_record = cursor.fetchone()
+
+        logging.info(f">> server_record--- {server_record} ")
+        
+        if server_record:
+            # Update currentplayers and increment total_updates if serverurl exists
+            new_total_updates = server_record[1] + 1
+            cursor.execute("UPDATE serverTracking SET currentplayers = ?, total_updates = ? WHERE serverurl = ?", (data['curplayers'], new_total_updates, data['serverurl']))
+        else:
+            # Insert new row if serverurl does not exist
+            cursor.execute("INSERT INTO serverTracking (serverurl, currentplayers, created, total_updates) VALUES (?, ?, ?, 1)", (data['serverurl'], data['curplayers'], datetime.now()))
+
+        conn.commit()
+        logging.info(f">> committed update serverTracking ")
         conn.close()
 
-        # Loop over the result set and send SMS notifications
-        for row in phone_numbers:
-            phone_number = row[0]
-            send_whatsapp(phone_number, alert_message)
-            logging.info(f'Sent whatsapp message to phone: {phone_number} ')
-        conn.close()
+
+########################################################
+########################################################
+        # Send Alerts to game-alert-system recipiends
+
+        # if it's not a server-sync message (at least once in 24 hours)
+        if alert_message is not None:
+
+            discord_response = send_to_discord(alert_message)
+            logging.info(f'Sent to Discord: {discord_response}')
+
+
+            ########################################################
+            # find users who have opted in for alerts and send them SMS
+            # Connect to the SQLite database
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+
+            ########################################################
+            # SEND SMS
+            # Execute the SELECT query
+            cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='S'")
+            phone_numbers = cursor.fetchall()
+            #conn.close()
+
+            # Loop over the result set and send SMS notifications
+            for row in phone_numbers:
+                phone_number = row[0]
+                send_sms(phone_number, alert_message)
+                logging.info(f'Sent sms message to phone: {phone_number} ')
+
+            ########################################################
+            # SEND WHATSAPP
+            # Execute the SELECT query
+            cursor.execute("SELECT phone_number FROM users WHERE opt_in=1 AND type='W'")
+            phone_numbers = cursor.fetchall()
+            #conn.close()
+
+            # Loop over the result set and send SMS notifications
+            for row in phone_numbers:
+                phone_number = row[0]
+                send_whatsapp(phone_number, alert_message)
+                logging.info(f'Sent whatsapp message to phone: {phone_number} ')
+            conn.close()
+
+
+
+        # this was a server sync message didn't send any 
+        else:
+            logging.info(f'GAS Alert was NOT Sent : - just a server sync')
+
+
+########################################################
+
 
 
     except Exception as e:

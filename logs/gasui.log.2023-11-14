@@ -66,3 +66,164 @@
 2023-11-22 14:51:45,071 [INFO] - The CSRF token is missing.
 2023-11-22 17:18:11,064 [INFO] - The CSRF token is missing.
 2023-11-22 18:52:44,715 [INFO] - The CSRF token is missing.
+2023-11-22 20:22:01,888 [INFO] - > In / - TN:  +1 - going to check if in db
+2023-11-22 20:22:01,889 [INFO] - > Got a new tn: +1 not found in the DB, going to clean, add it....
+2023-11-22 20:22:01,889 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 20:22:01,889 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 20:22:01,889 [INFO] - Headers:
+2023-11-22 20:22:01,889 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 20:22:01,889 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 20:22:01,889 [INFO] - Accept-Charset : utf-8
+2023-11-22 20:22:01,889 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 20:22:01,889 [INFO] - Accept : application/json
+2023-11-22 20:22:01,889 [INFO] - -- END Twilio API Request --
+2023-11-22 20:22:02,146 [INFO] - Response Status Code: 400
+2023-11-22 20:22:02,146 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 20:22:02 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '148', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ7f004ec5ef0de847c3237c85f98ac9d4', 'Twilio-Request-Duration': '0.065', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 20:22:02,146 [INFO] - > transformed_phone tn: +11
+2023-11-22 20:22:02,146 [INFO] - > There was an error, bailing out. 
+2023-11-22 20:22:09,749 [INFO] - > In / - TN:  +12673532203 - going to check if in db
+2023-11-22 20:22:09,749 [INFO] - > Got a new tn: +12673532203 not found in the DB, going to clean, add it....
+2023-11-22 20:22:09,749 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 20:22:09,749 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 20:22:09,749 [INFO] - Headers:
+2023-11-22 20:22:09,749 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 20:22:09,749 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 20:22:09,749 [INFO] - Accept-Charset : utf-8
+2023-11-22 20:22:09,749 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 20:22:09,749 [INFO] - Accept : application/json
+2023-11-22 20:22:09,749 [INFO] - -- END Twilio API Request --
+2023-11-22 20:22:09,889 [INFO] - Response Status Code: 201
+2023-11-22 20:22:09,889 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 20:22:09 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '797', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ0abd1fc68126f30c9e34aa9383e4d704', 'Twilio-Request-Duration': '0.123', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 20:22:09,889 [INFO] - > transformed_phone tn: +112673532203
+2023-11-22 20:22:09,894 [INFO] - > sent first OTC and created row in users.db
+2023-11-22 20:25:26,612 [INFO] - The CSRF token is missing.
+2023-11-22 21:55:32,050 [INFO] - The CSRF token is missing.
+2023-11-22 23:08:29,909 [INFO] - > In / - TN:  +13092518026 - going to check if in db
+2023-11-22 23:08:29,909 [INFO] - > Got a new tn: +13092518026 not found in the DB, going to clean, add it....
+2023-11-22 23:08:29,909 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 23:08:29,909 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 23:08:29,910 [INFO] - Headers:
+2023-11-22 23:08:29,910 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 23:08:29,910 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 23:08:29,910 [INFO] - Accept-Charset : utf-8
+2023-11-22 23:08:29,910 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 23:08:29,910 [INFO] - Accept : application/json
+2023-11-22 23:08:29,910 [INFO] - -- END Twilio API Request --
+2023-11-22 23:08:30,173 [INFO] - Response Status Code: 201
+2023-11-22 23:08:30,173 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 23:08:30 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '797', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQb1cc11974bcc3652d20879da5cde9ce0', 'Twilio-Request-Duration': '0.129', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 23:08:30,173 [INFO] - > transformed_phone tn: +113092518026
+2023-11-22 23:08:30,177 [INFO] - > sent first OTC and created row in users.db
+2023-11-22 23:08:54,604 [INFO] - > In / - TN:  +13092518026 - going to check if in db
+2023-11-22 23:08:54,604 [INFO] - > Got a new tn: +13092518026 not found in the DB, going to clean, add it....
+2023-11-22 23:08:54,604 [INFO] - -- BEGIN Twilio API Request --
+2023-11-22 23:08:54,604 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-22 23:08:54,604 [INFO] - Headers:
+2023-11-22 23:08:54,604 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-22 23:08:54,604 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-22 23:08:54,604 [INFO] - Accept-Charset : utf-8
+2023-11-22 23:08:54,604 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-22 23:08:54,604 [INFO] - Accept : application/json
+2023-11-22 23:08:54,604 [INFO] - -- END Twilio API Request --
+2023-11-22 23:08:54,747 [INFO] - Response Status Code: 201
+2023-11-22 23:08:54,747 [INFO] - Response Headers: {'Date': 'Wed, 22 Nov 2023 23:08:54 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '797', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ4426ad3f1f934969f1a1554217927bc6', 'Twilio-Request-Duration': '0.125', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-22 23:08:54,747 [INFO] - > transformed_phone tn: +113092518026
+2023-11-22 23:08:54,751 [INFO] - > sent first OTC and created row in users.db
+2023-11-22 23:08:54,782 [INFO] - >in /confirm_code route, calling confirm_code.html for code
+2023-11-22 23:25:30,361 [INFO] - The CSRF token is missing.
+2023-11-22 23:48:06,565 [INFO] - The CSRF token is missing.
+2023-11-23 02:52:12,392 [INFO] - The CSRF token is missing.
+2023-11-23 05:22:21,773 [INFO] - The CSRF token is missing.
+2023-11-23 05:31:02,267 [INFO] - The CSRF token is missing.
+2023-11-23 06:39:49,784 [INFO] - The CSRF token is missing.
+2023-11-23 07:55:41,260 [INFO] - The CSRF token is missing.
+2023-11-23 09:31:32,047 [INFO] - The CSRF token is missing.
+2023-11-23 11:43:19,989 [INFO] - The CSRF token is missing.
+2023-11-23 13:38:44,553 [INFO] - The CSRF token is missing.
+2023-11-23 14:31:21,977 [INFO] - > In / - TN:  +12159839558 - going to check if in db
+2023-11-23 14:31:21,977 [INFO] - > Got a new tn: +12159839558 not found in the DB, going to clean, add it....
+2023-11-23 14:31:21,977 [INFO] - -- BEGIN Twilio API Request --
+2023-11-23 14:31:21,977 [INFO] - POST Request: https://api.twilio.com/2010-04-01/Accounts/ACca2f29c5eb2d6f3cb6b7ab5f73cae8e0/Messages.json
+2023-11-23 14:31:21,977 [INFO] - Headers:
+2023-11-23 14:31:21,977 [INFO] - User-Agent : twilio-python/8.10.2 (Linux x86_64) Python/3.11.6
+2023-11-23 14:31:21,977 [INFO] - X-Twilio-Client : python-8.10.2
+2023-11-23 14:31:21,977 [INFO] - Accept-Charset : utf-8
+2023-11-23 14:31:21,977 [INFO] - Content-Type : application/x-www-form-urlencoded
+2023-11-23 14:31:21,977 [INFO] - Accept : application/json
+2023-11-23 14:31:21,977 [INFO] - -- END Twilio API Request --
+2023-11-23 14:31:22,218 [INFO] - Response Status Code: 201
+2023-11-23 14:31:22,219 [INFO] - Response Headers: {'Date': 'Thu, 23 Nov 2023 14:31:22 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '797', 'Connection': 'keep-alive', 'Twilio-Request-Id': 'RQ71a82a842c00754351e42289e89e52f5', 'Twilio-Request-Duration': '0.128', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, Idempotency-Key', 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Expose-Headers': 'ETag', 'Access-Control-Allow-Credentials': 'true', 'Twilio-Concurrent-Requests': '1', 'X-Shenanigans': 'none', 'X-Powered-By': 'AT-5000', 'X-Home-Region': 'us1', 'X-API-Domain': 'api.twilio.com'}
+2023-11-23 14:31:22,219 [INFO] - > transformed_phone tn: +112159839558
+2023-11-23 14:31:22,223 [INFO] - > sent first OTC and created row in users.db
+2023-11-23 14:31:22,239 [INFO] - >in /confirm_code route, calling confirm_code.html for code
+2023-11-23 14:31:38,386 [INFO] - >in CONFIRM with code:564069
+2023-11-23 14:31:38,386 [INFO] - >in CONFIRM with user:(14, '+112159839558', '564069', None, 0, None, 'S', '2023-11-23 14:31:21.977053', None)
+2023-11-23 14:31:38,386 [INFO] - >in CONFIRM ...found the row:
+2023-11-23 14:31:38,386 [INFO] - >> user[1] = +112159839558
+2023-11-23 14:31:38,386 [INFO] - >> user[2] = 564069
+2023-11-23 14:31:38,386 [INFO] - >> user[3] = None
+2023-11-23 14:31:38,386 [INFO] - >> user[4] = 0
+2023-11-23 14:31:38,386 [INFO] - >> user[5] = None
+2023-11-23 14:31:38,386 [INFO] - >> user[6] = S
+2023-11-23 14:31:38,386 [INFO] - >> user[7] = 2023-11-23 14:31:21.977053
+2023-11-23 14:31:38,387 [INFO] - >in CONFIRM if true for  564069 = 564069
+2023-11-23 14:31:38,392 [INFO] - >in CONFIRM ...updated db and CONFIRMED +112159839558
+2023-11-23 14:39:58,151 [INFO] - The CSRF token is missing.
+2023-11-23 15:53:53,957 [INFO] - The CSRF token is missing.
+2023-11-23 17:50:41,192 [INFO] - The CSRF token is missing.
+2023-11-23 18:50:06,349 [INFO] - The CSRF token is missing.
+2023-11-23 21:11:07,640 [INFO] - The CSRF token is missing.
+2023-11-24 01:24:15,637 [INFO] - The CSRF token is missing.
+2023-11-24 02:22:47,092 [INFO] - The CSRF token is missing.
+2023-11-24 04:18:01,743 [INFO] - The CSRF token is missing.
+2023-11-24 09:41:10,030 [INFO] - The CSRF token is missing.
+2023-11-24 14:18:17,809 [INFO] - The CSRF token is missing.
+2023-11-24 16:39:48,757 [INFO] - The CSRF token is missing.
+2023-11-24 17:37:56,039 [INFO] - The CSRF token is missing.
+2023-11-24 20:01:25,254 [INFO] - The CSRF token is missing.
+2023-11-24 21:40:19,633 [INFO] - The CSRF token is missing.
+2023-11-24 21:45:37,402 [INFO] - The CSRF token is missing.
+2023-11-24 22:50:58,291 [INFO] - The CSRF token is missing.
+2023-11-25 01:50:49,357 [INFO] - The CSRF token is missing.
+2023-11-25 04:54:29,143 [INFO] - The CSRF token is missing.
+2023-11-25 05:12:52,387 [INFO] - The CSRF token is missing.
+2023-11-25 07:26:29,218 [INFO] - The CSRF token is missing.
+2023-11-25 07:50:20,231 [INFO] - The CSRF token is missing.
+2023-11-25 08:52:51,063 [INFO] - The CSRF token is missing.
+2023-11-25 09:21:50,496 [INFO] - The CSRF token is missing.
+2023-11-25 12:53:43,815 [INFO] - The CSRF token is missing.
+2023-11-25 14:59:27,940 [INFO] - The CSRF token is missing.
+2023-11-25 16:47:29,130 [INFO] - The CSRF token is missing.
+2023-11-25 17:59:09,877 [INFO] - The CSRF token is missing.
+2023-11-25 19:29:01,325 [INFO] - The CSRF token is missing.
+2023-11-25 20:01:01,108 [INFO] - The CSRF token is missing.
+2023-11-26 00:05:51,555 [INFO] - The CSRF token is missing.
+2023-11-26 02:16:17,685 [INFO] - The CSRF token is missing.
+2023-11-26 05:40:53,148 [INFO] - The CSRF token is missing.
+2023-11-26 07:10:47,634 [INFO] - The CSRF token is missing.
+2023-11-26 08:41:18,282 [INFO] - The CSRF token is missing.
+2023-11-26 08:55:26,277 [INFO] - The CSRF token is missing.
+2023-11-26 10:25:04,587 [INFO] - The CSRF token is missing.
+2023-11-26 12:10:56,162 [INFO] - The CSRF token is missing.
+2023-11-26 15:01:28,017 [INFO] - The CSRF token is missing.
+2023-11-26 15:18:18,744 [INFO] - The CSRF token is missing.
+2023-11-26 16:21:08,640 [INFO] - The CSRF token is missing.
+2023-11-26 16:27:55,427 [INFO] - The CSRF token is missing.
+2023-11-26 18:33:35,668 [INFO] - The CSRF token is missing.
+2023-11-26 20:46:21,942 [INFO] - The CSRF token is missing.
+2023-11-26 22:34:10,085 [INFO] - The CSRF token is missing.
+2023-11-27 02:05:30,468 [INFO] - The CSRF token is missing.
+2023-11-27 02:07:03,445 [INFO] - The CSRF token is missing.
+2023-11-27 02:55:42,202 [INFO] - The CSRF token is missing.
+2023-11-27 05:00:56,006 [INFO] - The CSRF token is missing.
+2023-11-27 10:13:24,744 [INFO] - The CSRF token is missing.
+2023-11-27 10:56:40,329 [INFO] - The CSRF token is missing.
+2023-11-27 13:34:39,697 [INFO] - The CSRF token is missing.
+2023-11-27 13:39:28,840 [INFO] - The CSRF token is missing.
+2023-11-27 15:42:54,223 [INFO] - The CSRF token is missing.
+2023-11-27 16:28:29,379 [INFO] - The CSRF token is missing.
+2023-11-27 17:36:42,292 [INFO] - The CSRF token is missing.
+2023-11-27 19:33:23,178 [INFO] - The CSRF token is missing.
+2023-11-27 20:16:21,345 [INFO] - The CSRF token is missing.
+2023-11-27 20:55:37,113 [INFO] - The CSRF token is missing.
+2023-11-27 22:02:23,722 [INFO] - The CSRF token is missing.
+2023-11-27 22:39:35,916 [INFO] - The CSRF token is missing.

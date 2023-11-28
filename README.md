@@ -49,6 +49,8 @@ Then:
 $ sudo systemctl restart gas.service
 $ sudo systemctl restart gasui.service
 
+$ sudo systemctl stop gas
+$ sudo systemctl start gas
 
 And watch the output. Fix any errors, if it's error free you should see:
 
@@ -68,6 +70,10 @@ which indicates the service started up the flask application fronted with gunico
 Then you can watch the logs:
 
 ~/fujinetGameAlerts$ tail -f logs/gas.log
+
+
+
+
 
 
 # Managing Lobby Server
