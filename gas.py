@@ -331,12 +331,16 @@ def json_post():
                     alert_message = f'🌐 Server event- GameServer: [{game_name}] the last player has left the game.'
 
                 elif datetime.now() - creation_time < timedelta(hours=24):
-                    logging.info(f"> inside date OR curplayer 0: setting alert_message to none ") 
+                    logging.info(f"> inside elif - less than 24 hours: setting alert_message to none ") 
                     alert_message = None
 
                 else:
-                    logging.info(f"> inside if/else: setting alert message to server event ")
-                    alert_message = f'🌐 Server event- GameServer: game [{game_name}] on [{table_param}] has 0 players currently.'
+                    logging.info(f"> inside if/else: updating serverTracking row with new time")
+                    # Update the row with the current time and date
+                    new_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                    cursor.execute("UPDATE serverTracking SET created = ? WHERE serverurl = ?", (new_time, serverurl))
+                    conn.commit()
+                    alert_message = f'🌐 Server event- GameServer: game [{game_name}] 24 hour sync.'
             else:
                 # No record found, perhaps send the message or handle as needed
                 logging.info(f">> No record found in serverTracking ") 
