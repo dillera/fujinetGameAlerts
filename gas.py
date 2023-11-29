@@ -72,11 +72,9 @@ def close_connection(exception):
         db.close()
 
 
-## Create SQLite database connection
+# Create gameEvents table if it doesn't exist
 conn = sqlite3.connect('gameEvents.db')
 cursor = conn.cursor()
-
-# Create gameEvents table if it doesn't exist
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS gameEvents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -231,7 +229,7 @@ def extract_url_and_table_param(url):
 @app.route('/game', methods=['POST'])
 
 def json_post():
-    logging.info(f">> In POST for /game ")
+    logging.info(f">>>>> In top json_post, handling a post.... ")
     current_datetime = datetime.now()
 
     try:
@@ -243,7 +241,11 @@ def json_post():
         curplayers = data['curplayers']
         game_name = data['game']
         serverurl = data['serverurl']
-        logging.error(f'> Data in this post is: currentplayers:{curplayers} game_name:{game_name}, serverurl:{serverurl}  ')
+        logging.info(f'> parsed payload: currentplayers:{curplayers}, game_name:{game_name}, serverurl:{serverurl}  ')
+
+        # Get the base url and the table name from the serverurl
+        base_url, table_param = extract_url_and_table_param(serverurl)
+        logging.info(f"> extracted table name:{table_param} for server:{base_url} ") 
 
 ########################################################
         # Insert data into the gameEvents database
@@ -257,7 +259,7 @@ def json_post():
             data['serverurl'], data['status'], data['maxplayers'], data['curplayers'], 'POST'
         ))
         conn.commit()
-        logging.info(f">> committed update for gameEvents ")
+        logging.info(f">> committed insert for gameEvents ")
         #conn.close()
 
 ########################################################
@@ -282,7 +284,7 @@ def json_post():
             cursor.execute("INSERT INTO playerTracking (game, curplayers, created, total_players) VALUES (?, ?, ?, 1)", (data['game'], data['curplayers'], datetime.now()))
 
         conn.commit()
-        logging.info(f">> committed update for playerTracking ")
+        logging.info(f">> committed upsert for playerTracking ")
         # conn.close()
 
  
@@ -293,17 +295,14 @@ def json_post():
     # with a total_players count of 1 or update an existing record by incrementing the total_players count. 
 
 
-
-
-
-        # Get the base url and the table name from the serverurl
-        base_url, table_param = extract_url_and_table_param(serverurl)
-        logging.info(f">>> extracted table name {table_param} for server {base_url} ") 
-
-        logging.info(f">> open db connection for serverTracking ") 
+ 
+        logging.info(f">> open connection for serverTracking ") 
         conn = sqlite3.connect('serverTracking.db')
         cursor = conn.cursor()
 
+        logging.info(f">> open connection for gameEvents ") 
+        connGE = sqlite3.connect('gameEvents.db')
+        cursorGE = connGE.cursor()
 
 
         # This could be a server message that all players have left, or it could be a
@@ -326,22 +325,43 @@ def json_post():
                 creation_time = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S.%f')
                 current_players_in_db = result[1]
                
-                if datetime.now() - creation_time < timedelta(hours=24) or current_players_in_db != 0:
-                    logging.info(f"> if: setting alert_message to none ") 
+
+                if current_players_in_db != 0:
+                    logging.info(f"> inside date OR curplayer 0: setting alert_message to none ") 
+                    alert_message = f'🌐 Server event- GameServer: [{game_name}] the last player has left the game.'
+
+                elif datetime.now() - creation_time < timedelta(hours=24):
+                    logging.info(f"> inside date OR curplayer 0: setting alert_message to none ") 
                     alert_message = None
+
                 else:
-                    logging.info(f"> if/else: setting alert message to server event ")
-                    alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
+                    logging.info(f"> inside if/else: setting alert message to server event ")
+                    alert_message = f'🌐 Server event- GameServer: game [{game_name}] on [{table_param}] has 0 players currently.'
             else:
                 # No record found, perhaps send the message or handle as needed
                 logging.info(f">> No record found in serverTracking ") 
                 alert_message = f'🌐 Server event- GameServer: [{base_url}] running game [{game_name}] on [{table_param}] has 0 players currently.'
 
-        # this is a player event so send a message
+        # this is a player event so evaluate if the curplayers is the same as the last event
+        # if yes, this is just another sync event and so don't send anything
+        # if no then this is a player add or part- send message
         else:
-            logging.info(f">> curplayers for this request is {curplayers}, create alert_message ") 
-            alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
+            logging.info(f">> curplayers for this request is {curplayers}, >>>create alert_message? ") 
+ 
+            # Query the two most recent gameEvents for the given serverurl
+            cursorGE.execute("SELECT curplayers FROM gameEvents WHERE serverurl = ? ORDER BY created DESC LIMIT 2", (serverurl,))
+            results = cursorGE.fetchall()
 
+            logging.info(f">>>  results = {results}, results[0][0] = {results[0][0]}, results[1][0] = {results[1][0]}")
+            
+            if len(results) == 2 and results[0][0] != results[1][0]:
+                # There are two records and the curplayers values are different
+                logging.info(f"> Current players value has changed, set alert_message to message ")
+                alert_message = f'🎮 Player event- Game: [{game_name}] now has {curplayers} player(s) currently online.'
+            else:
+                # Not enough records or the curplayers values haven't changed
+                logging.info(f"> Current players value is the same or insufficient data, set alert_message to None ")
+                alert_message = None
 
 
 # now that we've decided to send the message or not go ahead and update the serverTracking db for this event.
@@ -351,16 +371,16 @@ def json_post():
         #if data['curplayers'] == 0:
 
 
-        logging.info(f">> Heading into  servertracking.... ") 
+        logging.info(f">> Heading into serverTracking.... ") 
 
         # Check if the server URL already exists in serverUpdates
         cursor.execute("SELECT id, total_updates FROM serverTracking WHERE serverurl = ?", (data['serverurl'],))
         server_record = cursor.fetchone()
 
-        logging.info(f">> server_record--- {server_record} ")
+        logging.info(f">> Found server_record ")
         
         if server_record:
-            # Update currentplayers and increment total_updates if serverurl exists
+            # Update currentplayers to curplayers in POST and increment total_updates if serverurl exists
             new_total_updates = server_record[1] + 1
             cursor.execute("UPDATE serverTracking SET currentplayers = ?, total_updates = ? WHERE serverurl = ?", (data['curplayers'], new_total_updates, data['serverurl']))
         else:
@@ -368,7 +388,7 @@ def json_post():
             cursor.execute("INSERT INTO serverTracking (serverurl, currentplayers, created, total_updates) VALUES (?, ?, ?, 1)", (data['serverurl'], data['curplayers'], datetime.now()))
 
         conn.commit()
-        logging.info(f">> committed update serverTracking ")
+        logging.info(f">> committed upsert for serverTracking ")
         conn.close()
 
 
@@ -376,11 +396,13 @@ def json_post():
 ########################################################
         # Send Alerts to game-alert-system recipiends
 
+        logging.info(f">> about to check if alert_message should be sent or not....  ")
         # if it's not a server-sync message (at least once in 24 hours)
         if alert_message is not None:
-
+            logging.info(f">>> alert_message NOT NONE, send messages....")
+            logging.info(f">>> alert_message is >>{alert_message}<<  starting to send messaages...")
             discord_response = send_to_discord(alert_message)
-            logging.info(f'Sent to Discord: {discord_response}')
+            logging.info(f'Sent mesage to Discord: {discord_response}')
 
 
             ########################################################
@@ -399,7 +421,7 @@ def json_post():
             # Loop over the result set and send SMS notifications
             for row in phone_numbers:
                 phone_number = row[0]
-                send_sms(phone_number, alert_message)
+                #send_sms(phone_number, alert_message)
                 logging.info(f'Sent sms message to phone: {phone_number} ')
 
             ########################################################
@@ -412,7 +434,7 @@ def json_post():
             # Loop over the result set and send SMS notifications
             for row in phone_numbers:
                 phone_number = row[0]
-                send_whatsapp(phone_number, alert_message)
+                #send_whatsapp(phone_number, alert_message)
                 logging.info(f'Sent whatsapp message to phone: {phone_number} ')
             conn.close()
 
@@ -423,18 +445,17 @@ def json_post():
             logging.info(f'GAS Alert was NOT Sent : - just a server sync')
 
 
-########################################################
-
-
-
+    ########################################################
+    # end the try
     except Exception as e:
         # Log any exceptions
         logging.error(f'Error processing JSON data: {e}')
         return jsonify({"error": str(e)}), 400
 
-
+    logging.info(f'>>>>> At end of json_post, about to return JSON message as response to Lobby....')
     return jsonify({"message": "Received JSON data and inserted into database"}), 200
 
+logging.info(f'>>>>>>>>>>>>>> This should print only on app startup!')
 
 ########################################################
 # Route for incoming DELETE server
