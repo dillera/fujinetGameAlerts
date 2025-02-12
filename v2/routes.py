@@ -1,4 +1,3 @@
-
 from flask import request, jsonify
 import logging
 from datetime import datetime
@@ -6,12 +5,17 @@ from db import get_db, close_connection
 from twilio_handler import send_sms, send_whatsapp
 from discord_handler import send_to_discord
 from utils import toggle_whatsapp_prefix, extract_url_and_table_param
-from event_logic import handle_game_event
+from event_logic import (
+    handle_game_event,
+    handle_delete_event,
+    handle_sms_error,
+    handle_incoming_sms
+)
 
 def setup_routes(app):
     @app.teardown_appcontext
     def teardown_db(exception):
-        close_db(exception)
+        close_connection(exception)
 
 
     @app.route('/game', methods=['POST'])

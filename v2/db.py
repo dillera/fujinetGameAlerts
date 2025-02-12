@@ -1,4 +1,3 @@
-
 import sqlite3
 from flask import g
 
@@ -75,6 +74,19 @@ def setup_database():
             serverurl TEXT,
             currentplayers INTEGER,
             total_updates INTEGER DEFAULT 0
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+    # Create globalSync table to track app-wide sync status
+    conn = sqlite3.connect('globalSync.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS globalSync (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            last_sync DATETIME,
+            sync_type TEXT
         )
     ''')
     conn.commit()

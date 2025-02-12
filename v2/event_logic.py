@@ -1,14 +1,16 @@
 from datetime import datetime
 import logging
+import json
+from flask import current_app
 from db import get_db
 from discord_handler import send_to_discord
 from twilio_handler import send_sms, send_whatsapp
-from server_sync import evaluate_server_sync  # Import the new server sync logic
-from utils import toggle_whatsapp_prefix
+from server_sync import evaluate_server_sync
+from utils import toggle_whatsapp_prefix, extract_url_and_table_param
 
 
 def handle_game_event(data):
-    db = get_db()
+    db = get_db(current_app)
     cursor = db.cursor()
 
     # Extract data from the request
@@ -42,7 +44,7 @@ def handle_game_event(data):
 
 
 def handle_delete_event(data):
-    db = get_db()
+    db = get_db(current_app)
     cursor = db.cursor()
     current_datetime = datetime.now()
 
@@ -71,7 +73,7 @@ def handle_delete_event(data):
 
 
 def handle_sms_error(data):
-    db = get_db()
+    db = get_db(current_app)
     cursor = db.cursor()
     timestamp = datetime.now()
 
@@ -106,7 +108,7 @@ def handle_incoming_sms(data):
     logging.info(f"Received message: {body} from: {mo} to: {mt}")
 
     # Get the count of rows in the gameEvents database
-    db = get_db()
+    db = get_db(current_app)
     cursor = db.cursor()
     cursor.execute('SELECT COUNT(*) FROM gameEvents')
     count = cursor.fetchone()[0]
@@ -169,7 +171,7 @@ def send_notifications(alert_message):
     logging.info(f'Sent message to Discord: {discord_response}')
 
     # Send SMS and WhatsApp notifications
-    db = get_db()
+    db = get_db(current_app)
     cursor = db.cursor()
 
     # Send SMS notifications
@@ -185,5 +187,3 @@ def send_notifications(alert_message):
     for row in phone_numbers:
         send_whatsapp(row[0], alert_message)
         logging.info(f'Sent WhatsApp to {row[0]}')
-
-
