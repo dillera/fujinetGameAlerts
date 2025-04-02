@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAS Status</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; max-width: 600px; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Game Alert Service (GAS) Status</h1>
+    <p><strong>Current Server Time:</strong> {{ current_time }}</p>
+    
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td>Running</td>
+        </tr>
+        <tr>
+            <td>Hostname</td>
+            <td>{{ hostname }}</td>
+        </tr>
+        <tr>
+            <td>Operating System</td>
+            <td>{{ os_info }}</td>
+        </tr>
+         <tr>
+            <td>Python Version</td>
+            <td>{{ python_version }}</td>
+        </tr>
+         <tr>
+            <td>Process ID (PID)</td>
+            <td>{{ pid }}</td>
+        </tr>
+        <tr>
+            <td>Application Start Time</td>
+            <td>{{ start_time }}</td>
+        </tr>
+        <tr>
+            <td>Application Uptime</td>
+            <td>{{ uptime }}</td>
+        </tr>
+        <tr>
+            <td>Working Directory</td>
+            <td>{{ config.WORKING_DIRECTORY }}</td>
+        </tr>
+        <tr>
+            <td>Database File</td>
+            <td>{{ config.DATABASE }}</td>
+        </tr>
+         <tr>
+            <td>Debug Mode</td>
+            <td>{{ config.DEBUG }}</td>
+        </tr>
+         <tr>
+            <td>Listening Port</td>
+            <td>{{ config.PORT }}</td>
+        </tr>
+         <tr>
+            <td>Database Connection</td>
+            <td>{{ db_status }}</td>
+        </tr>
+    </table>
+</body>
+</html>

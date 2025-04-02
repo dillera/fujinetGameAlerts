@@ -14,13 +14,18 @@ from datetime import datetime, timedelta
 from functools import wraps
 from logging.handlers import TimedRotatingFileHandler
 from urllib.parse import urlparse, parse_qs
+import platform # Added for system info
 
 import dotenv
 import requests
-from flask import Flask, g, jsonify, request
+from flask import Flask, g, jsonify, request, render_template # Added render_template
 from ratelimit import limits, sleep_and_retry
 from twilio.rest import Client
 import socket # Import socket to get hostname
+
+# --- Global Variables ---
+APP_START_TIME = datetime.now() # Record startup time
+# ----------------------
 
 # --- Early Logger Initialization ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] - %(message)s')
@@ -598,6 +603,70 @@ def twilio_sms():
 
 
     return jsonify({"message": "handled incoming message"}), 200
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    # Can add checks here (e.g., DB connectivity)
+    return jsonify({"status": "ok"}), 200
+
+@app.route('/alive', methods=['GET'])
+def alive_status():
+    """Returns an HTML page with detailed application and server status."""
+    try:
+        # Gather information
+        hostname = socket.gethostname()
+        os_info = f"{platform.system()} {platform.release()} ({platform.machine()})"
+        python_version = platform.python_version()
+        pid = os.getpid()
+        now = datetime.now()
+        uptime_delta = now - APP_START_TIME
+        
+        # Format uptime
+        total_seconds = int(uptime_delta.total_seconds())
+        days, remainder = divmod(total_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        uptime_str = f"{days}d {hours}h {minutes}m {seconds}s"
+
+        # Database Check
+        db_status = "Unknown"
+        try:
+            db = db_manager.get_db()
+            # Simple check: Can we execute a basic query?
+            cursor = db.execute("SELECT 1")
+            cursor.fetchone()
+            db_status = "Connected"
+            # Note: This opens a connection if not already open for the request
+        except sqlite3.Error as db_err:
+            logger.error(f"Database check failed for /alive: {db_err}")
+            db_status = f"Error: {db_err}"
+        except Exception as e:
+             logger.error(f"Unexpected error during DB check for /alive: {e}")
+             db_status = "Error checking connection"
+
+        status_data = {
+            'current_time': now.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            'hostname': hostname,
+            'os_info': os_info,
+            'python_version': python_version,
+            'pid': pid,
+            'start_time': APP_START_TIME.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            'uptime': uptime_str,
+            'config': { # Expose only non-sensitive config
+                'WORKING_DIRECTORY': app.config.get('WORKING_DIRECTORY'),
+                'DATABASE': app.config.get('DATABASE'),
+                'DEBUG': app.config.get('DEBUG'),
+                'PORT': app.config.get('PORT')
+            },
+            'db_status': db_status
+        }
+        return render_template('alive.html', **status_data)
+
+    except Exception as e:
+        logger.exception("Error generating /alive status page")
+        # Return a simpler error response if template rendering fails
+        return "<h1>Error Generating Status Page</h1><p>Check server logs for details.</p>", 500
+# ------------------------
 
 # --- Startup Sequence ---
 # 1. Check Environment Variables
