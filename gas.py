@@ -250,6 +250,14 @@ class Database:
                 currentplayers INTEGER,
                 total_updates INTEGER DEFAULT 0
             );
+            
+            CREATE TABLE IF NOT EXISTS users (
+                phone_number TEXT PRIMARY KEY,
+                opt_in INTEGER DEFAULT 0,
+                type TEXT DEFAULT 'S' CHECK(type IN ('S', 'W')), -- S=SMS, W=WhatsApp
+                created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         ''' # (Keep your full schema here)
         try:
             with self.get_db() as conn:
