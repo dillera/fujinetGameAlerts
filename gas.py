@@ -15,6 +15,7 @@ from functools import wraps
 from logging.handlers import TimedRotatingFileHandler
 from urllib.parse import urlparse, parse_qs
 import platform # Added for system info
+import atexit # For scheduler shutdown
 
 import dotenv
 import requests
@@ -22,6 +23,8 @@ from flask import Flask, g, jsonify, request, render_template # Added render_tem
 from ratelimit import limits, sleep_and_retry
 from twilio.rest import Client
 import socket # Import socket to get hostname
+from apscheduler.schedulers.background import BackgroundScheduler # Added for scheduled tasks
+from apscheduler.triggers.cron import CronTrigger # Added for cron-style scheduling
 
 # --- Global Variables ---
 APP_START_TIME = datetime.now() # Record startup time
@@ -441,22 +444,17 @@ def json_post():
                 cursor.execute("SELECT created, currentplayers FROM serverTracking WHERE serverurl = ?", (data['serverurl'],))
                 result = cursor.fetchone()
 
-                if result:
-                    creation_time = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S.%f')
-                    current_players_in_db = result[1]
-
-                    if current_players_in_db != 0:
-                        alert_message = f'🌐 Server event- GameServer: [{base_url}] the last player has left the game.'
-
-                    elif datetime.now() - creation_time < timedelta(hours=24):
-                        alert_message = None
-
-                    else:
-                        # Update the row with the current time and date
-                        new_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                        cursor.execute("UPDATE serverTracking SET created = ? WHERE serverurl = ?", (new_time, data['serverurl']))
-                        conn.commit()
-                        alert_message = f'🌐 Server event- GameServer: game [{data["game"]}] 24 hour sync.'
+            if result:
+                creation_time_str, current_players_in_db = result # Unpack result
+                # Only send "last player left" if the DB showed players previously
+                if current_players_in_db != 0:
+                    alert_message = f'🌐 Server event- GameServer: [{base_url}] the last player has left the game.'
+                    logger.info(f"Last player left detected for {data['serverurl']}")
+                # Removed the 24-hour sync logic from here - handled by scheduler
+                # else:
+                #    logger.info(f"Server {data['serverurl']} has 0 players, sync handled by scheduler.")
+            else:
+                logger.warning(f"No serverTracking record found for {data['serverurl']} when processing 0 player event.")
 
         logger.info(f"Calculated alert_message: {alert_message}") # Add logging
 
@@ -690,40 +688,94 @@ def alive_status():
         return "<h1>Error Generating Status Page</h1><p>Check server logs for details.</p>", 500
 # ------------------------
 
-# --- Startup Sequence ---
-# 1. Check Environment Variables
-try:
-    check_required_env_vars()
-except RuntimeError:
-    # Already logged, just exit if check failed
-    import sys
-    logger.critical("Exiting due to missing environment variables.")
-    sys.exit(1)
+# --- Scheduled Task --- #
+def perform_daily_sync_check():
+    """Scheduled task to check for idle servers and update their sync time."""
+    with app.app_context(): # Need app context to access config and db_manager
+        logger.info("Scheduler: Running daily sync check...")
+        servers_to_update = []
+        try:
+            twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+            with db_manager.get_db() as conn:
+                cursor = conn.cursor()
+                # Find servers with 0 players whose timestamp is older than 24h
+                cursor.execute("SELECT serverurl FROM serverTracking WHERE currentplayers = 0 AND created < ?", 
+                               (twenty_four_hours_ago.strftime('%Y-%m-%d %H:%M:%S.%f'),))
+                servers_to_update = [row[0] for row in cursor.fetchall()]
 
-# 2. Initialize Database Schema
-initialize_database()
+                if servers_to_update:
+                    logger.info(f"Scheduler: Found {len(servers_to_update)} idle server(s) needing timestamp update.")
+                    new_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                    
+                    # Update timestamps in bulk
+                    placeholders = ', '.join('?' * len(servers_to_update))
+                    sql = f"UPDATE serverTracking SET created = ? WHERE serverurl IN ({placeholders})"
+                    params = [new_time] + servers_to_update
+                    cursor.execute(sql, params)
+                    conn.commit()
+                    logger.info(f"Scheduler: Updated timestamps for {len(servers_to_update)} server(s).")
+                    
+                    # Send single Discord message
+                    discord_message = f"🌐 System Sync: Daily check completed. Updated timestamps for {len(servers_to_update)} idle server(s)."
+                    send_discord_message(discord_message)
+                else:
+                    logger.info("Scheduler: No idle servers required timestamp updates.")
+                    # Optionally send a "heartbeat" message even if no updates?
+                    # send_discord_message("🌐 System Sync: Daily check completed. No updates needed.")
 
-# 3. Send Startup Discord Message (if not in debug/reloading mode)
-if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    try:
-        hostname = socket.gethostname()
-        startup_message = f":rocket: GAS server started successfully on {hostname} (Mode: {'Gunicorn' if 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '').lower() else 'Direct'})."
-        send_discord_message(startup_message)
-    except Exception as e:
-        logger.error(f"Failed to send startup Discord message: {e}")
-# ----------------------
+        except sqlite3.Error as e:
+            logger.error(f"Scheduler: Database error during daily sync check: {e}")
+        except Exception as e:
+            logger.error(f"Scheduler: Unexpected error during daily sync check: {e}")
 
-# --- Main Execution Block ---
+# --- Main Execution --- #
 if __name__ == '__main__':
-    logger.info(f"Starting Flask development server on port {app.config['PORT']}...")
-    # Run Flask dev server (use_reloader=False prevents double execution of startup code)
-    app.run(
-        host='0.0.0.0', 
-        port=int(app.config['PORT']), 
-        debug=app.config['DEBUG'], 
-        use_reloader=False 
-    )
-# --------------------------
+    logger.info("Starting Flask application...")
+    db_manager.init_db() # Ensure DB is ready
+
+    # Initialize Scheduler
+    scheduler = BackgroundScheduler(daemon=True)
+    # Schedule the job to run daily at 3:00 AM server time
+    scheduler.add_job(perform_daily_sync_check, CronTrigger(hour=3, minute=0))
+    scheduler.start()
+    logger.info("Background scheduler started for daily sync check.")
+
+    # Register scheduler shutdown hook for clean exit
+    atexit.register(lambda: scheduler.shutdown())
+
+    # Get port from config, default handled by get_env_var
+    port = int(app.config.get('PORT', 5100))
+    debug_mode = app.config.get('DEBUG', 'False').lower() == 'true'
+    
+    logger.info(f"Running on port {port} with debug mode: {debug_mode}")
+
+    # Note: When running with Gunicorn, this block is not executed.
+    # Gunicorn manages the process and workers.
+    # The scheduler needs to be started when the app is loaded by Gunicorn.
+    # We might need to adjust this slightly for Gunicorn deployment.
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+
+    # Shutdown scheduler (though atexit should handle it)
+    # try:
+    #     pass # app.run blocks here
+    # finally:
+    #     logger.info("Shutting down scheduler...")
+    #     scheduler.shutdown()
+
+# --- Gunicorn Adjustment --- #
+# To ensure the scheduler runs with Gunicorn, we start it when the module is loaded,
+# outside the if __name__ == '__main__' block, but ensuring it only happens once.
+
+scheduler_started = False
+if not scheduler_started:
+    logger.info("Initializing scheduler for Gunicorn...")
+    db_manager.init_db() # Ensure DB is ready before scheduler might access it
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(perform_daily_sync_check, CronTrigger(hour=3, minute=0))
+    scheduler.start()
+    logger.info("Background scheduler started for daily sync check (Gunicorn context).")
+    atexit.register(lambda: scheduler.shutdown())
+    scheduler_started = True
 
 def toggle_whatsapp_prefix(input_string):
     prefix = "whatsapp:"
