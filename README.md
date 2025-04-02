@@ -125,29 +125,58 @@ This is a typical production setup on a Linux server (e.g., Ubuntu).
         sudo systemctl status gas.service
         ```
 
-2.  **Nginx Configuration:**
+2.  **Web UI Service (`gasui.service`):**
+    Similar to the main service, the web UI needs its own systemd service:
+    ```bash
+    sudo cp gasui.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable gasui.service
+    sudo systemctl start gasui.service
+    ```
+    
+    You'll also need to configure Nginx to proxy to this service, similar to the main service configuration.
+
+3.  **Nginx Configuration:**
     Configure Nginx as a reverse proxy to forward requests to the Gunicorn socket. Create a site configuration (e.g., `/etc/nginx/sites-available/gas`):
     ```nginx
     server {
         listen 80;
-        # listen 443 ssl; # Uncomment for HTTPS
-        server_name your_domain.com; # Or IP address
-
+        server_name your_domain.com;  # Replace with your domain or IP
+ 
+        # Redirect HTTP to HTTPS (optional but recommended)
+        return 301 https://$host$request_uri;
+    }
+ 
+    server {
+        listen 443 ssl;
+        server_name your_domain.com;  # Replace with your domain or IP
+ 
         # SSL configuration (if using HTTPS)
-        # ssl_certificate /path/to/your/fullchain.pem;
-        # ssl_certificate_key /path/to/your/privkey.pem;
-        # include /etc/letsencrypt/options-ssl-nginx.conf;
-        # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-        location / {
-            # Forward standard requests to the Gunicorn socket
-            proxy_pass http://unix:/home/ubuntu/fujinetGameAlerts/gas.sock; # Adjust socket path
+        ssl_certificate /etc/letsencrypt/live/your_domain.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/your_domain.com/privkey.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_prefer_server_ciphers on;
+ 
+        # Main API endpoint
+        location /game {
+            # Proxy to the Gunicorn socket
+            proxy_pass http://unix:/home/ubuntu/fujinetGameAlerts/gas.sock;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
-
+ 
+        # Web UI endpoints (for gasui.py)
+        location / {
+            # Proxy to the gasui Gunicorn socket
+            proxy_pass http://unix:/home/ubuntu/fujinetGameAlerts/gasui.sock;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+ 
         # Special handling if game servers post to a different path prefix externally
         # For example, if servers post to http://your_domain.com/fuji/game
         location /fuji/game {
@@ -158,7 +187,7 @@ This is a typical production setup on a Linux server (e.g., Ubuntu).
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
-
+ 
         # Add other locations as needed (e.g., for static files if any)
     }
     ```
@@ -170,16 +199,39 @@ This is a typical production setup on a Linux server (e.g., Ubuntu).
         sudo systemctl restart nginx
         ```
 
-3.  **Deployment Script (`deploy.sh`):**
-    The included `deploy.sh` script automates pulling changes, running setup (installing/updating dependencies), and restarting the `gas.service`. Run it from your local machine where you have SSH access to the server. It assumes SSH keys are configured for passwordless login.
+4.  **Deployment Script (`deploy.sh`):**
+    The repository includes a `deploy.sh.example` script that automates pulling changes, running setup (installing/updating dependencies), and restarting both the `gas.service` and `gasui.service`. 
+    
+    To use it:
+    ```bash
+    # Copy the example to your actual deployment script
+    cp deploy.sh.example deploy.sh
+    
+    # Edit the script to set your server details
+    nano deploy.sh
+    
+    # Make it executable
+    chmod +x deploy.sh
+    
+    # Run the deployment
+    ./deploy.sh
+    ```
+    
+    Run it from your local machine where you have SSH access to the server. It assumes SSH keys are configured for passwordless login.
 
 ## Monitoring
 
 *   **Systemd Service Logs:**
     ```bash
+    # Monitor the main service
     sudo journalctl -u gas.service -f
+    
+    # Monitor the web UI service
+    sudo journalctl -u gasui.service -f
+    
+    # Monitor both services together
+    sudo journalctl -u gas.service -u gasui.service -f
     ```
-    Look for Gunicorn startup messages, Flask application logs (including scheduler startup and execution logs), and any errors.
 *   **Application Log File:**
     ```bash
     tail -f /path/to/fujinetGameAlerts/logs/gas.log

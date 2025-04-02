@@ -1,0 +1,40 @@
+#!/bin/bash
+# Deployment script for Fujinet Game Alert System
+# This script automates the process of deploying updates to the server
+# Copy this file to deploy.sh and customize as needed
+
+# Configuration
+SERVER_USER="ubuntu"
+SERVER_HOST="your-server-hostname-or-ip"
+SERVER_PATH="/home/ubuntu/fujinetGameAlerts"
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}Starting deployment to ${SERVER_HOST}...${NC}"
+
+# Step 1: SSH into the server and stop the services
+echo -e "${YELLOW}Stopping services...${NC}"
+ssh ${SERVER_USER}@${SERVER_HOST} "sudo systemctl stop gas.service gasui.service"
+
+# Step 2: Pull the latest changes from git
+echo -e "${YELLOW}Pulling latest changes from git...${NC}"
+ssh ${SERVER_USER}@${SERVER_HOST} "cd ${SERVER_PATH} && git pull"
+
+# Step 3: Install or update dependencies
+echo -e "${YELLOW}Installing/updating dependencies...${NC}"
+ssh ${SERVER_USER}@${SERVER_HOST} "cd ${SERVER_PATH} && source venv/bin/activate && pip install -r requirements.txt"
+
+# Step 4: Restart the services
+echo -e "${YELLOW}Starting services...${NC}"
+ssh ${SERVER_USER}@${SERVER_HOST} "sudo systemctl start gas.service gasui.service"
+
+# Step 5: Check service status
+echo -e "${YELLOW}Checking service status...${NC}"
+ssh ${SERVER_USER}@${SERVER_HOST} "sudo systemctl status gas.service gasui.service --no-pager"
+
+echo -e "${GREEN}Deployment completed successfully!${NC}"
+echo -e "${YELLOW}To monitor logs, use: ssh ${SERVER_USER}@${SERVER_HOST} 'sudo journalctl -u gas.service -u gasui.service -f'${NC}"

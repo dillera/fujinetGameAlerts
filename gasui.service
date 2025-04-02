@@ -1,0 +1,17 @@
+[Unit]
+Description=Fujinet Game Alert System Web UI
+After=network.target gas.service
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/fujinetGameAlerts
+Environment="PATH=/home/ubuntu/fujinetGameAlerts/venv/bin"
+EnvironmentFile=/home/ubuntu/fujinetGameAlerts/.env
+ExecStart=/bin/bash -c 'source /home/ubuntu/fujinetGameAlerts/venv/bin/activate && \
+    gunicorn --workers 1 --bind unix:gasui.sock -m 007 gasui:app'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
