@@ -731,7 +731,7 @@ def perform_daily_sync_check():
 # --- Main Execution --- #
 if __name__ == '__main__':
     logger.info("Starting Flask application...")
-    db_manager.init_db() # Ensure DB is ready
+    db_manager.init_db_schema() # Ensure DB is ready
 
     # Initialize Scheduler
     scheduler = BackgroundScheduler(daemon=True)
@@ -769,7 +769,7 @@ if __name__ == '__main__':
 scheduler_started = False
 if not scheduler_started:
     logger.info("Initializing scheduler for Gunicorn...")
-    db_manager.init_db() # Ensure DB is ready before scheduler might access it
+    db_manager.init_db_schema() # Ensure DB is ready before scheduler might access it
     scheduler = BackgroundScheduler(daemon=True)
     scheduler.add_job(perform_daily_sync_check, CronTrigger(hour=3, minute=0))
     scheduler.start()
