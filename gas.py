@@ -48,28 +48,47 @@ TYPE_SMS = 'S'
 TYPE_WHATSAPP = 'W'
 
 # Logger
+# Ensure logs directory exists
+log_dir = os.path.join(app.config['WORKING_DIRECTORY'], 'logs')
+try:
+    os.makedirs(log_dir, exist_ok=True)
+except Exception as e:
+    print(f"Warning: Could not create logs directory: {e}")
+
 # File path for your logs
-#log_file_path = f'{working_dir}/logs/gas.log'
-log_file_path = '/home/ubuntu/fujinetGameAlerts/logs/gas.log'
+log_file_path = os.path.join(log_dir, 'gas.log')
 
-# Set up the handler
-file_handler = TimedRotatingFileHandler(
-    log_file_path, 
-    when="W0", # Rotate every week on Monday (you can adjust this as needed)
-    interval=1,
-    backupCount=4 # Keep 4 weeks worth of logs
-)
-file_handler.setLevel(logging.INFO)
-
-# Formatter
-formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
-file_handler.setFormatter(formatter)
-
-# Set up the logger
+# Set up logging configuration
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
 
+try:
+    # Set up the handler with error handling
+    file_handler = TimedRotatingFileHandler(
+        log_file_path, 
+        when="W0",  # Rotate every week on Monday
+        interval=1,
+        backupCount=4  # Keep 4 weeks worth of logs
+    )
+    file_handler.setLevel(logging.INFO)
+
+    # Formatter
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    # Add handler to logger
+    logger.addHandler(file_handler)
+
+    logging.info(f"Logging initialized. Log file: {log_file_path}")
+except Exception as e:
+    print(f"Warning: Could not initialize file logging: {e}")
+    # Fallback to console logging
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    logging.info("Fallback to console logging due to file logging initialization error")
 
 # Database connection with context manager
 class Database:
