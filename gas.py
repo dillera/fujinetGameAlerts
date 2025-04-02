@@ -62,6 +62,17 @@ client = Client(app.config['TWILIO_ACCT_SID'], app.config['TWILIO_AUTH_TOKEN'])
 TYPE_SMS = 'S'
 TYPE_WHATSAPP = 'W'
 
+# Helper functions
+def extract_url_and_table_param(url):
+    """Extract base URL and table parameter from a URL string."""
+    parsed_url = urlparse(url)
+    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+    
+    query_params = parse_qs(parsed_url.query)
+    table_param = query_params.get('table', [None])[0]
+
+    return base_url, table_param
+
 # Logger
 # Ensure logs directory exists
 log_dir = os.path.join(app.config['WORKING_DIRECTORY'], 'logs')
