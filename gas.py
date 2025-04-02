@@ -28,22 +28,51 @@ except Exception as e:
 app = Flask(__name__)
 
 # Environment variables with validation
-def get_env_var(name, default=None, required=True):
+def get_env_var(name, default=None, required=True, is_secret=False):
     value = os.getenv(name, default)
     if required and value is None:
         error_msg = f"Missing required environment variable: {name}. "
         error_msg += "Please ensure you have a .env file with this variable or set it in your environment."
         print(error_msg)
         raise ValueError(error_msg)
+    # Log confirmation, masking secrets
+    log_value = "********" if is_secret and value else value
+    logger.info(f"Environment variable loaded: {name} = {log_value}")
     return value
+
+# Function to check all required variables explicitly
+def check_required_env_vars():
+    logger.info("Checking required environment variables...")
+    required_vars = [
+        ('TWILIO_ACCT_SID', True),
+        ('TWILIO_AUTH_TOKEN', True),
+        ('TWILIO_TN', False),
+        ('DISCORD_WEBHOOK', True),
+        ('WORKING_DIRECTORY', False)
+    ]
+    all_present = True
+    for var_name, is_secret in required_vars:
+        try:
+            get_env_var(var_name, required=True, is_secret=is_secret)
+        except ValueError:
+            logger.error(f"Startup check FAILED: Missing required environment variable: {var_name}")
+            all_present = False
+    
+    if all_present:
+        logger.info("All required environment variables are present.")
+    else:
+        logger.error("One or more required environment variables are missing. Application might not function correctly.")
+        # Optionally, raise an exception here to halt startup if desired
+        # raise RuntimeError("Missing required environment variables, cannot start.")
+    return all_present
 
 # Configuration
 try:
     app.config.update(
-        TWILIO_ACCT_SID=get_env_var('TWILIO_ACCT_SID'),
-        TWILIO_AUTH_TOKEN=get_env_var('TWILIO_AUTH_TOKEN'),
+        TWILIO_ACCT_SID=get_env_var('TWILIO_ACCT_SID', required=True, is_secret=True),
+        TWILIO_AUTH_TOKEN=get_env_var('TWILIO_AUTH_TOKEN', required=True, is_secret=True),
         TWILIO_TN=get_env_var('TWILIO_TN'),
-        DISCORD_WEBHOOK=get_env_var('DISCORD_WEBHOOK'),
+        DISCORD_WEBHOOK=get_env_var('DISCORD_WEBHOOK', required=True),
         WORKING_DIRECTORY=get_env_var('WORKING_DIRECTORY', '/home/ubuntu/fujinetGameAlerts'),
         DEBUG=get_env_var('DEBUG', 'True', required=False).lower() == 'true',
         PORT=get_env_var('PORT', '5100', required=False),
@@ -56,8 +85,13 @@ except ValueError as e:
     # Re-raise to prevent app from starting with missing config
     raise
 
-# Initialize Twilio client
-client = Client(app.config['TWILIO_ACCT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+# Initialize Twilio client (only if config loaded)
+client = None
+try:
+    client = Client(app.config['TWILIO_ACCT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+    logger.info("Twilio client initialized successfully.")
+except Exception as e:
+    logger.error(f"Failed to initialize Twilio client: {e}")
 
 # Constants
 TYPE_SMS = 'S'
@@ -81,6 +115,10 @@ def send_discord_message(message):
         logger.warning("Discord webhook URL not configured. Skipping notification.")
         return
     
+    # Log partial URL for debugging without exposing the full secret
+    partial_url = webhook_url[:webhook_url.rfind('/') + 1] + "..."
+    logger.info(f"Attempting to send Discord message to: {partial_url}")
+    
     payload = {
         "content": message
     }
@@ -89,7 +127,7 @@ def send_discord_message(message):
         response.raise_for_status() # Raise an exception for bad status codes
         logger.info(f"Sent Discord message: {message}")
     except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to send Discord message: {e}")
+        logger.error(f"Failed to send Discord message to {partial_url}: {e}")
 
 # Logger
 # Ensure logs directory exists
@@ -548,7 +586,10 @@ def twilio_sms():
 
 
 if __name__ == '__main__':
-    # Ensure all tables exist
+    # Perform checks early
+    check_required_env_vars()
+
+    # Initialize Database
     with db.get_db() as conn:
         cursor = conn.cursor()
         cursor.executescript('''
@@ -606,10 +647,14 @@ if __name__ == '__main__':
     # Start Flask development server (for local testing)
     app.run(
         host='0.0.0.0',
-        debug=app.config['DEBUG'],
-        port=int(app.config['PORT'])
+        debug=app.config['DEBUG'], 
+        port=int(app.config['PORT']),
+        use_reloader=False # Important for running checks only once
     )
 else:
+    # Perform checks early when run with Gunicorn
+    check_required_env_vars()
+    
     # Send startup message when run with Gunicorn
     try:
         hostname = socket.gethostname()
