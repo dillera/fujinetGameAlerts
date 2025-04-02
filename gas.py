@@ -405,11 +405,26 @@ def json_post():
                 cursor = conn.cursor()
                 cursor.execute("SELECT curplayers FROM gameEvents WHERE serverurl = ? ORDER BY created DESC LIMIT 2", (data['serverurl'],))
                 results = cursor.fetchall()
+                logger.info(f"Player change check: Found {len(results)} previous events for {data['serverurl']} -> {results}")
 
-                if len(results) == 2 and results[0][0] != results[1][0]:
-                    # There are two records and the curplayers values are different
-                    alert_message = f'🎮 Player event- Game: [{data["game"]}] now has {data["curplayers"]} player(s) currently online.'
+            # Check if we have enough data to compare
+            if results and len(results) == 2:
+                previous_players = results[1][0] # The second most recent event
+                current_players = results[0][0] # The most recent event
+                logger.info(f"Player change check: Comparing prev={previous_players} vs curr={current_players} (Incoming data['curplayers']={data['curplayers']})")
 
+                # Compare player counts
+                if previous_players < current_players:
+                    alert_message = f'🧑‍🤝‍🧑 Player event - GameServer: [{base_url}] running game [{table_param}] player joined. Total players: [{current_players}]'
+                    logger.info("Player change check: Player JOIN detected.")
+                elif previous_players > current_players:
+                    alert_message = f'💨 Player event - GameServer: [{base_url}] running game [{table_param}] player left. Total players: [{current_players}]'
+                    logger.info("Player change check: Player LEAVE detected.")
+                else:
+                    logger.info("Player change check: Player count unchanged.")
+            else:
+                logger.info("Player change check: Not enough history or condition not met for comparison.")
+        
         # this was a server sync message didn't send any 
         else:
             # Check the creation_time and currentplayers for the serverurl in serverTracking
@@ -435,11 +450,11 @@ def json_post():
                         conn.commit()
                         alert_message = f'🌐 Server event- GameServer: game [{data["game"]}] 24 hour sync.'
 
+        logger.info(f"Calculated alert_message: {alert_message}") # Add logging
+
         # Send message to Discord and users
         if alert_message is not None:
-            discord_response = send_discord_message(alert_message)
-            logging.info(f'Sent mesage to Discord: {discord_response}')
-
+            send_discord_message(alert_message) 
             # find users who have opted in for alerts and send them SMS
             with db_manager.get_db() as conn:
                 cursor = conn.cursor()
@@ -499,8 +514,7 @@ def delete_event():
         base_url, table_param = extract_url_and_table_param(serverurl)
 
         alert_message = f'🌐 Server event - GameServer: [{base_url}] running game [{table_param}] has been deleted from Lobby.'
-        discord_response = send_discord_message(alert_message)
-        logging.info(f'Sent to Discord: {discord_response}')
+        send_discord_message(alert_message)
 
         return jsonify({"message": f"'DELETE' event added for serverurl {serverurl}"}), 200
 
@@ -713,26 +727,6 @@ def toggle_whatsapp_prefix(input_string):
     # If string does not start with 'whatsapp:', append it
     else:
         return prefix + input_string
-
-def send_to_discord(message_content):
-    logging.info(f'in send_to_discord with message: {message_content}')
-    logging.info(f'target url: {app.config["DISCORD_WEBHOOK"]}')
-
-    # Create the message payload
-    data = {
-        "content": message_content,
-    }
-
-    # Send the message to Discord
-    response = requests.post(app.config["DISCORD_WEBHOOK"], json=data)
-
-    # Log the response
-    if response.status_code == 204:
-        logging.info("Message sent to Discord successfully!")
-    else:
-        logging.error(f"Failed to send message to Discord. Status code: {response.status_code}. Response: {response.text}")
-
-    return response
 
 def send_sms(to, body):
     """Helper function to send an SMS using Twilio."""
