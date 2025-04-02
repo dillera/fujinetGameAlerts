@@ -16,6 +16,7 @@ from urllib.parse import urlparse, parse_qs
 from functools import wraps
 import dotenv
 from ratelimit import limits, sleep_and_retry
+import socket # Import socket to get hostname
 
 # Load environment variables
 try:
@@ -72,6 +73,23 @@ def extract_url_and_table_param(url):
     table_param = query_params.get('table', [None])[0]
 
     return base_url, table_param
+
+def send_discord_message(message):
+    """Sends a message to the configured Discord webhook."""
+    webhook_url = app.config.get('DISCORD_WEBHOOK')
+    if not webhook_url:
+        logger.warning("Discord webhook URL not configured. Skipping notification.")
+        return
+    
+    payload = {
+        "content": message
+    }
+    try:
+        response = requests.post(webhook_url, json=payload)
+        response.raise_for_status() # Raise an exception for bad status codes
+        logger.info(f"Sent Discord message: {message}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send Discord message: {e}")
 
 # Logger
 # Ensure logs directory exists
@@ -152,6 +170,20 @@ def handle_errors(f):
 def rate_limit():
     pass
 
+# Log incoming requests
+@app.before_request
+def log_request_info():
+    rate_limit() # Apply rate limiting before processing
+    # Log request details
+    log_message = (
+        f"Incoming Request:\n"
+        f"  Method: {request.method}\n"
+        f"  URL: {request.url}\n"
+        f"  Headers: {dict(request.headers)}\n"
+        f"  Body: {request.get_data(as_text=True)}"
+    )
+    logger.info(log_message)
+
 ########################################################
 ########################################################
 # add or remove whatsapp prefix to TNs
@@ -223,7 +255,6 @@ def send_whatsapp(to, body):
 @app.route('/game', methods=['POST'])
 @handle_errors
 def json_post():
-    rate_limit()
     logging.info(f">>>>> In top json_post, handling a post.... ")
     current_datetime = datetime.now()
 
@@ -564,8 +595,25 @@ if __name__ == '__main__':
             );
         ''')
         
+    # Send startup message to Discord
+    try:
+        hostname = socket.gethostname()
+        startup_message = f"GAS server started successfully on {hostname}."
+        send_discord_message(startup_message)
+    except Exception as e:
+        logger.error(f"Failed to send startup Discord message: {e}")
+
+    # Start Flask development server (for local testing)
     app.run(
         host='0.0.0.0',
         debug=app.config['DEBUG'],
         port=int(app.config['PORT'])
     )
+else:
+    # Send startup message when run with Gunicorn
+    try:
+        hostname = socket.gethostname()
+        startup_message = f"GAS server started successfully on {hostname} (via Gunicorn)."
+        send_discord_message(startup_message)
+    except Exception as e:
+        logger.error(f"Failed to send startup Discord message (Gunicorn): {e}")
