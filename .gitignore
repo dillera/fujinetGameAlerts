@@ -1,6 +1,44 @@
-# ignore
+# Database files
 *.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Log files
 *.log
+logs/
+log/
+
+# Python virtual environments
 venv/
+env/
+.env/
+.venv/
+
+# Python cache files
 __pycache__/
-logs/*
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+.env.local
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+tmp/
+temp/

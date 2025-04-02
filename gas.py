@@ -4,7 +4,8 @@
 #  Handles POSTs from lobby server for new games
 #  Handles POSTS from twilio for incoming whatsapp or sms messages
 #
-# Andy Diller / dillera / 10/2023
+# Andy Diller / dillera / 10/2023 - version 1.0.0
+# 03/2025 - version 1.0.1
 #
 from flask import Flask, request, jsonify, g
 import sqlite3, os, logging, requests
