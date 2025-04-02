@@ -12,68 +12,140 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from flask import send_from_directory
-
 from flask.sessions import SecureCookieSession
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Regexp
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+import dotenv
 
+# Setup basic logging first
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] - %(message)s')
+logger = logging.getLogger(__name__)
 
+# Environment variable handling
+def get_env_var(name, default=None, required=True, is_secret=False):
+    """Gets an environment variable, logs its presence (masked if secret), and validates if required."""
+    value = os.getenv(name, default)
+    if required and value is None:
+        error_msg = f"Missing required environment variable: {name}. Please check .env file or environment."
+        logger.critical(error_msg)
+        raise ValueError(error_msg)
+    log_value = "********" if is_secret and value else value
+    logger.info(f"Env Var Loaded: {name} = {log_value}")
+    return value
+
+def check_required_env_vars():
+    """Checks all required environment variables at startup."""
+    logger.info("Checking required environment variables...")
+    required_vars = [
+        ('TWILIO_ACCT_SID', True),
+        ('TWILIO_AUTH_TOKEN', True),
+        ('TWILIO_TN', False),
+        ('FA_SECRET_KEY', True),
+        ('WORKING_DIRECTORY', False),
+        ('DATABASE', False),
+        ('PORT', False),
+        ('DEBUG', False),
+    ]
+    all_present = True
+    for var_name, is_secret in required_vars:
+        try:
+            get_env_var(var_name, required=True, is_secret=is_secret)
+        except ValueError:
+            # Error already logged in get_env_var
+            all_present = False
+    
+    if all_present:
+        logger.info("All required environment variables seem present.")
+    else:
+        logger.critical("One or more required environment variables MISSING. Startup aborted.")
+        # Halt startup if critical variables are missing
+        raise RuntimeError("Missing required environment variables, cannot start.")
+    return all_present
+
+# Load .env file first
+try:
+    dotenv_path = dotenv.find_dotenv()
+    if dotenv_path:
+        logger.info(f"Loading environment variables from: {dotenv_path}")
+        dotenv.load_dotenv(dotenv_path)
+    else:
+        logger.warning(".env file not found. Relying on system environment variables.")
+except Exception as e:
+    logger.error(f"Error loading .env file: {e}")
+
+# Flask App Initialization
 app = Flask(__name__)
 
-# Setup Logging
-#logging.basicConfig(level=logging.INFO,
- #                   format='%(asctime)s [%(levelname)s] - %(message)s',
- #                   handlers=[logging.StreamHandler()])
+# Configuration
+try:
+    logger.info("Loading Flask app configuration...")
+    app.config.update(
+        SECRET_KEY=get_env_var('FA_SECRET_KEY', required=True, is_secret=True),
+        TWILIO_ACCT_SID=get_env_var('TWILIO_ACCT_SID', required=True, is_secret=True),
+        TWILIO_AUTH_TOKEN=get_env_var('TWILIO_AUTH_TOKEN', required=True, is_secret=True),
+        TWILIO_TN=get_env_var('TWILIO_TN', required=True),
+        WORKING_DIRECTORY=get_env_var('WORKING_DIRECTORY', default=os.getcwd()),
+        DATABASE=get_env_var('DATABASE', default='gameEvents.db'),
+        DEBUG=get_env_var('DEBUG', default='False', required=False).lower() == 'true',
+        PORT=get_env_var('PORT', default='5101', required=False)
+    )
+    logger.info("Flask app configuration loaded successfully.")
+except (ValueError, RuntimeError) as e:
+    # Errors during env var check/load are critical
+    logger.critical(f"CRITICAL ERROR during configuration: {e}. Application cannot start.")
+    # Exit cleanly if config fails
+    import sys
+    sys.exit(1)
 
+# Set up variables from config
 VERSION = '1.0.0'
-app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')
-account_sid              = os.getenv('TWILIO_ACCT_SID')
-auth_token               = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_tn                = os.getenv('TWILIO_TN')
-working_dir              = os.getenv('WORKING_DIRECTORY', os.getcwd())
-database_path            = os.getenv('DATABASE', 'gameEvents.db')
-database_file            = os.path.join(working_dir, database_path)
-type_sms      = 'S'
+working_dir = app.config['WORKING_DIRECTORY']
+database_path = app.config['DATABASE']
+database_file = os.path.join(working_dir, database_path)
+type_sms = 'S'
 type_whatsapp = 'W'
-set_debug     = False
-set_port      = '5101'
-client = Client(account_sid, auth_token)
-csrf   = CSRFProtect(app)
+set_debug = app.config['DEBUG']
+set_port = app.config['PORT']
 
-###################################################
-#
-# Logger
+# Initialize Twilio client
+try:
+    client = Client(app.config['TWILIO_ACCT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+    logger.info("Twilio client initialized successfully.")
+except Exception as e:
+    logger.error(f"Failed to initialize Twilio client: {e}")
+    client = None
 
-# File path for your logs
-log_dir = os.path.join(working_dir, 'logs')
-os.makedirs(log_dir, exist_ok=True)
-log_file_path = os.path.join(log_dir, 'gasui.log')
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
-# Set up the handler
-file_handler = TimedRotatingFileHandler(
-    log_file_path, 
-    when="W0", # Rotate every week on Monday (you can adjust this as needed)
-    interval=1,
-    backupCount=4 # Keep 4 weeks worth of logs
-)
-file_handler.setLevel(logging.INFO)
+# Logger Configuration
+try:
+    log_dir = os.path.join(working_dir, 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    log_file_path = os.path.join(log_dir, 'gasui.log')
 
-# Formatter
-formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
-file_handler.setFormatter(formatter)
+    # Set up the handler
+    file_handler = TimedRotatingFileHandler(
+        log_file_path, 
+        when="W0", # Rotate every week on Monday
+        interval=1,
+        backupCount=4 # Keep 4 weeks worth of logs
+    )
+    file_handler.setLevel(logging.INFO)
 
-# Set up the logger
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
+    # Formatter
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+    file_handler.setFormatter(formatter)
 
+    # Set up the logger
+    logger.addHandler(file_handler)
+    logger.info(f"File logging configured. Log file: {log_file_path}")
+except Exception as e:
+    logger.warning(f"Could not initialize file logging to {log_file_path}: {e}. Continuing with console logging.")
 
-####################################################
 # Database Setup
-#
-
 def get_db_connection():
     """Get a connection to the database."""
     try:
@@ -81,7 +153,7 @@ def get_db_connection():
         conn.row_factory = sqlite3.Row
         return conn
     except sqlite3.Error as e:
-        logging.error(f"Database connection error: {e}")
+        logger.error(f"Database connection error: {e}")
         raise
 
 # Initialize database schema if tables don't exist
