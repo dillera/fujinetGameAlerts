@@ -32,7 +32,9 @@ app.config['SECRET_KEY'] = os.getenv('FA_SECRET_KEY')
 account_sid              = os.getenv('TWILIO_ACCT_SID')
 auth_token               = os.getenv('TWILIO_AUTH_TOKEN')
 twilio_tn                = os.getenv('TWILIO_TN')
-working_dir              = os.getenv('WORKING_DIRECTORY')
+working_dir              = os.getenv('WORKING_DIRECTORY', os.getcwd())
+database_path            = os.getenv('DATABASE', 'gameEvents.db')
+database_file            = os.path.join(working_dir, database_path)
 type_sms      = 'S'
 type_whatsapp = 'W'
 set_debug     = False
@@ -45,8 +47,9 @@ csrf   = CSRFProtect(app)
 # Logger
 
 # File path for your logs
-working_dir = os.getcwd()
-log_file_path = f'{working_dir}/logs/gasui.log'
+log_dir = os.path.join(working_dir, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file_path = os.path.join(log_dir, 'gasui.log')
 
 # Set up the handler
 file_handler = TimedRotatingFileHandler(
@@ -68,28 +71,102 @@ logger.addHandler(file_handler)
 
 
 ####################################################
-# Databases
+# Database Setup
 #
 
-# Create SQLite3 database connection
-conn = sqlite3.connect('users.db')
-cursor = conn.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, phone_number TEXT, code TEXT, name TEXT, confirmed INTEGER, opt_in INTEGER, type TEXT, created, DATETIME)')
-logging.info(f"> >> creating connection to users.db")
-conn.commit()
-conn.close()
+def get_db_connection():
+    """Get a connection to the database."""
+    try:
+        conn = sqlite3.connect(database_file)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except sqlite3.Error as e:
+        logging.error(f"Database connection error: {e}")
+        raise
 
+# Initialize database schema if tables don't exist
+def init_db_schema():
+    """Initialize the database schema if tables don't exist."""
+    logging.info(f"Initializing database schema in {database_file}")
+    
+    # Schema matches the one in gas.py
+    schema_sql = '''
+        CREATE TABLE IF NOT EXISTS gameEvents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created DATETIME,
+            event_type TEXT,
+            game TEXT,
+            appkey INTEGER,
+            server TEXT,
+            region TEXT,
+            serverurl TEXT,
+            status TEXT,
+            maxplayers INTEGER,
+            curplayers INTEGER
+        );
+        
+        CREATE TABLE IF NOT EXISTS smsErrors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME,
+            resource_sid TEXT,
+            service_sid TEXT,
+            error_code TEXT,
+            error_message TEXT,
+            callback_url TEXT,
+            request_method TEXT,
+            error_details TEXT
+        );
+        
+        CREATE TABLE IF NOT EXISTS playerTracking (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game TEXT UNIQUE,
+            curplayers INTEGER,
+            total_players INTEGER DEFAULT 0,
+            created DATETIME
+        );
+        
+        CREATE TABLE IF NOT EXISTS serverTracking (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created DATETIME,
+            serverurl TEXT,
+            currentplayers INTEGER,
+            total_updates INTEGER DEFAULT 0
+        );
+        
+        CREATE TABLE IF NOT EXISTS users (
+            phone_number TEXT PRIMARY KEY,
+            opt_in INTEGER DEFAULT 0,
+            type TEXT DEFAULT 'S' CHECK(type IN ('S', 'W')), -- S=SMS, W=WhatsApp
+            created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            code TEXT,
+            name TEXT,
+            confirmed INTEGER DEFAULT 0
+        );
+        
+        CREATE TABLE IF NOT EXISTS sentEvents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created DATETIME,
+            target TEXT,
+            game TEXT,
+            event_id INT
+        );
+    '''
+    
+    try:
+        conn = get_db_connection()
+        conn.executescript(schema_sql)
+        conn.commit()
+        logging.info("Database schema initialization complete")
+    except sqlite3.Error as e:
+        logging.error(f"Failed to initialize database schema: {e}")
+        raise
+    finally:
+        if conn:
+            conn.close()
 
-# Create SQLite3 database connection for events
-# this will record events sent
-conn_sentEvents = sqlite3.connect('sentEvents.db')
-cursor_sentEvents = conn_sentEvents.cursor()
-cursor_sentEvents.execute('CREATE TABLE IF NOT EXISTS sentEvents (id INTEGER PRIMARY KEY, created, DATETIME, target TEXT, game TEXT, event_id INT)')
-logging.info(f"> >> creating connection to  sentEvents.db")
-conn_sentEvents.commit()
-conn_sentEvents.close()
-
-
+# Initialize the database schema
+init_db_schema()
 
 ###################################################
 
@@ -120,7 +197,7 @@ class DeletionForm(FlaskForm):
 
 
 def generate_random_code():
-    return ''.join(str(random.randint(0, 9)) for _ in range(6))
+    return ''.join(random.choices('0123456789', k=6))
 
 
 def clean_phone(phone_number):
@@ -173,36 +250,44 @@ def send_twilio_message(body, from_, to):
 
 
 def get_opt_in_status_from_db(phone_number):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-
-    # Execute a query to retrieve the opt_in status for the given phone number
-    cursor.execute('SELECT opt_in FROM users WHERE phone_number=?', (phone_number,))
-    result = cursor.fetchone()
-
-    conn.close()
-
-    if result:
-        return result[0]  # Assuming the result is a single value, return it
-    else:
-        return None  # Return None if no result was found for the given phone number
-
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT opt_in FROM users WHERE phone_number=?', (phone_number,))
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return result[0]
+        else:
+            return None
+    except Exception as e:
+        logging.error(f"Error getting opt-in status: {e}")
+        return None
 
 def get_user_count():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM users')
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM users')
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except Exception as e:
+        logging.error(f"Error getting user count: {e}")
+        return 0
 
 def get_sent_events_count():
-    conn = sqlite3.connect('sentEvents.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM sentEvents')
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM sentEvents')
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except Exception as e:
+        logging.error(f"Error getting sent events count: {e}")
+        return 0
 
 
 ###################################################
@@ -224,7 +309,7 @@ def index():
 #            transformed_phone=transform_phone_number(phone_number)
             logging.info(f"> In / - TN:  {phone_number} - going to check if in db")
 
-            conn = sqlite3.connect('users.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM users WHERE phone_number=?', (phone_number,))
             user = cursor.fetchone()
@@ -232,7 +317,7 @@ def index():
             if user:
                 # User is here, and already confirmed show them the dashboard page
                 # pass along the phone number so we can use it to determine opt_in
-                if user[4] == 1:  # User is already confirmed
+                if user['confirmed'] == 1:  # User is already confirmed
                     logging.info(f"> found in db and confirmed:  {user}")
                     opt_in_status=get_opt_in_status_from_db(phone_number)
                     logging.info(f"> opt in status found:  {opt_in_status}")
@@ -296,7 +381,7 @@ def index():
             code = generate_random_code()
 
             # Find out if the user has a row in the DB
-            conn = sqlite3.connect('users.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM users WHERE phone_number=?', (whatsapp_number,))
             user = cursor.fetchone()
@@ -304,7 +389,7 @@ def index():
             if user:
                 # User is here, AND already confirmed show them the dashboard page
                 # pass along the phone number so we can use it to determine opt_in
-                if user[4] == 1:  # User is already confirmed
+                if user['confirmed'] == 1:  # User is already confirmed
                     logging.info(f"> WA > found in db and confirmed:  {user}")
                     return redirect(url_for('dashboard', phone_number=whatsapp_number))
                     #return redirect(url_for('dashboard'))
@@ -340,7 +425,7 @@ def index():
 
                 # Store the code and WhatsApp number for later verification
                 # Treat WA as a phone number
-                conn = sqlite3.connect('users.db')
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute('INSERT INTO users (phone_number, code, confirmed, type, created) VALUES (?, ?, ?, ?, ?)', (whatsapp_number, code, 0, type_whatsapp, current_datetime))
                 conn.commit()
@@ -373,48 +458,43 @@ def dashboard():
     phone_number = request.args.get('phone_number')
     logging.info(f">loading dashboard for tn: {phone_number}")
 
-    # Check if the user is in the USERS database and confirmed
+    # Check if the user is in the database and confirmed
     # We should check again in case someone just clicked on the Menu Navbar
-    conn_users = sqlite3.connect('users.db')
-    cursor_users = conn_users.cursor()
-    cursor_users.execute('SELECT * FROM users WHERE phone_number=? AND confirmed=1', (phone_number,))
-    user = cursor_users.fetchone()
-    logging.info(f">in /dashboard for phone: {phone_number}")
- 
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE phone_number=? AND confirmed=1', (phone_number,))
+        user = cursor.fetchone()
+        logging.info(f">in /dashboard for phone: {phone_number}")
 
-    if user:
-        # if they have already confirmed their tn lets login
-        opt_in_status = user[5]
+        if user:
+            # if they have already confirmed their tn lets login
+            opt_in_status = user['opt_in']
 
-        logging.info(f">in /dashboard")
-        logging.info(f">> user[1] = {user[1]}")
-        logging.info(f">> user[2] = {user[2]}")
-        logging.info(f">> user[3] = {user[3]}")
-        logging.info(f">> user[4] = {user[4]}")
-        logging.info(f">> user[5] = {user[5]}")
+            logging.info(f">in /dashboard")
+            logging.info(f">> user phone_number = {user['phone_number']}")
+            logging.info(f">> user opt_in = {user['opt_in']}")
+            logging.info(f">> user type = {user['type']}")
+            logging.info(f">> user confirmed = {user['confirmed']}")
 
-        # Fetch events from events.db
-        conn_events = sqlite3.connect('gameEvents.db')
-        cursor_events = conn_events.cursor()
+            # Fetch events from the database
+            cursor.execute('SELECT * FROM gameEvents ORDER BY created DESC')
+            events = cursor.fetchall()
+            
+            # to be finished
+            delete_form = DeletionForm()
 
-        cursor_events.execute('SELECT * FROM gameEvents ORDER BY datetime DESC')
-        events = cursor_events.fetchall()
-        conn_events.close()
-        
-        # to be finished
-        delete_form = DeletionForm()
-
-        #return render_template('dashboard.html', events=events, phone_number=cleaned_phone, opt_in=opt_in_status)
-        return render_template('dashboard.html', events=events, phone_number=phone_number, delete_form=delete_form )
-
-
-    else:
-        flash('Invalid user-  please register first with a number below.')
-
-    flash('Welcome back to the index page- try that again.')
-    conn_users.close()
-    return redirect(url_for('index'))
-
+            conn.close()
+            return render_template('dashboard.html', events=events, phone_number=phone_number, delete_form=delete_form)
+        else:
+            flash('Invalid user- please register first with a number below.')
+            conn.close()
+            flash('Welcome back to the index page- try that again.')
+            return redirect(url_for('index'))
+    except Exception as e:
+        logging.error(f"Error in dashboard: {e}")
+        flash('An error occurred. Please try again later.')
+        return redirect(url_for('index'))
 
 ######################################################################################################
 @app.route('/update_opt_in', methods=['POST'])
@@ -424,14 +504,14 @@ def update_opt_in():
  
     try:
         opt_in_status = request.json.get('opt_in_status')
-        phone         = request.json.get('phone')
+        phone = request.json.get('phone')
 
         logging.info(f"Received request to update opt_in_status to {opt_in_status} for phone {phone}")
 
         # Update the database with the new opt_in_status value
-        conn = sqlite3.connect('users.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('UPDATE users SET opt_in=? WHERE phone_number=?', (opt_in_status, phone))
+        cursor.execute('UPDATE users SET opt_in=?, last_updated=CURRENT_TIMESTAMP WHERE phone_number=?', (opt_in_status, phone))
         conn.commit()
         conn.close()
 
@@ -459,28 +539,24 @@ def confirm():
     cleaned_code = code.strip()
     logging.info(f">in CONFIRM with code:{cleaned_code}")
 
-    conn = sqlite3.connect('users.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM users WHERE code=? AND confirmed=0', (cleaned_code,))
     user = cursor.fetchone()
     logging.info(f">in CONFIRM with user:{user}")
 
-    if user and user[4] == 0:
+    if user and user['confirmed'] == 0:
         logging.info(f">in CONFIRM ...found the row:")
-        logging.info(f">> user[1] = {user[1]}")
-        logging.info(f">> user[2] = {user[2]}")
-        logging.info(f">> user[3] = {user[3]}")
-        logging.info(f">> user[4] = {user[4]}")
-        logging.info(f">> user[5] = {user[5]}")
-        logging.info(f">> user[6] = {user[6]}")
-        logging.info(f">> user[7] = {user[7]}")
-        if user[2] == cleaned_code:
-            logging.info(f">in CONFIRM if true for  {user[2]} = {cleaned_code}")
-            cursor.execute('UPDATE users SET confirmed=1 WHERE id=?', (user[0],))
+        logging.info(f">> user phone_number = {user['phone_number']}")
+        logging.info(f">> user code = {user['code']}")
+        logging.info(f">> user confirmed = {user['confirmed']}")
+        if user['code'] == cleaned_code:
+            logging.info(f">in CONFIRM if true for  {user['code']} = {cleaned_code}")
+            cursor.execute('UPDATE users SET confirmed=1 WHERE phone_number=?', (user['phone_number'],))
             conn.commit()
             conn.close()
             flash('Phone number confirmed! Now Please enter it again below to visit your Dashboard.')
-            logging.info(f">in CONFIRM ...updated db and CONFIRMED {user[1]}")
+            logging.info(f">in CONFIRM ...updated db and CONFIRMED {user['phone_number']}")
         else:
             flash('Invalid code. Please try again.')
     else:
@@ -512,7 +588,7 @@ def delete_user():
         phone_number = phone_form.phone_number.data
 
         # Delete the user from the database based on the current phone_number
-        conn = sqlite3.connect('users.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('DELETE FROM users WHERE phone_number=?', (phone_number,))
         conn.commit()
@@ -565,4 +641,3 @@ def about():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=set_debug, port=set_port)
-
