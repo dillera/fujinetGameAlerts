@@ -18,7 +18,11 @@ import dotenv
 from ratelimit import limits, sleep_and_retry
 
 # Load environment variables
-dotenv.load_dotenv()
+try:
+    dotenv.load_dotenv()
+    print("Loaded environment variables from .env file")
+except Exception as e:
+    print(f"Warning: Could not load .env file: {e}")
 
 app = Flask(__name__)
 
@@ -26,20 +30,30 @@ app = Flask(__name__)
 def get_env_var(name, default=None, required=True):
     value = os.getenv(name, default)
     if required and value is None:
-        raise ValueError(f"Missing required environment variable: {name}")
+        error_msg = f"Missing required environment variable: {name}. "
+        error_msg += "Please ensure you have a .env file with this variable or set it in your environment."
+        print(error_msg)
+        raise ValueError(error_msg)
     return value
 
 # Configuration
-app.config.update(
-    TWILIO_ACCT_SID=get_env_var('TWILIO_ACCT_SID'),
-    TWILIO_AUTH_TOKEN=get_env_var('TWILIO_AUTH_TOKEN'),
-    TWILIO_TN=get_env_var('TWILIO_TN'),
-    DISCORD_WEBHOOK=get_env_var('DISCORD_WEBHOOK'),
-    WORKING_DIRECTORY=get_env_var('WORKING_DIRECTORY', '/home/ubuntu/fujinetGameAlerts'),
-    DEBUG=get_env_var('DEBUG', 'True', required=False).lower() == 'true',
-    PORT=get_env_var('PORT', '5100', required=False),
-    DATABASE='gameEvents.db'
-)
+try:
+    app.config.update(
+        TWILIO_ACCT_SID=get_env_var('TWILIO_ACCT_SID'),
+        TWILIO_AUTH_TOKEN=get_env_var('TWILIO_AUTH_TOKEN'),
+        TWILIO_TN=get_env_var('TWILIO_TN'),
+        DISCORD_WEBHOOK=get_env_var('DISCORD_WEBHOOK'),
+        WORKING_DIRECTORY=get_env_var('WORKING_DIRECTORY', '/home/ubuntu/fujinetGameAlerts'),
+        DEBUG=get_env_var('DEBUG', 'True', required=False).lower() == 'true',
+        PORT=get_env_var('PORT', '5100', required=False),
+        DATABASE='gameEvents.db'
+    )
+    print("Configuration loaded successfully")
+except ValueError as e:
+    print(f"Error in configuration: {e}")
+    print("Please check your .env file or environment variables")
+    # Re-raise to prevent app from starting with missing config
+    raise
 
 # Initialize Twilio client
 client = Client(app.config['TWILIO_ACCT_SID'], app.config['TWILIO_AUTH_TOKEN'])

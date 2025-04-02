@@ -21,6 +21,21 @@ pip install -r requirements.txt
 # Create logs directory if it doesn't exist
 mkdir -p logs
 
+# Create .env file if it doesn't exist
+if [ ! -f ".env" ]; then
+    echo "Creating .env file from template..."
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo "Please edit .env file with your actual credentials"
+        echo "Press Enter to open the file for editing, or Ctrl+C to skip"
+        read
+        ${EDITOR:-nano} .env
+    else
+        echo "ERROR: .env.example file not found. Please create a .env file manually."
+        exit 1
+    fi
+fi
+
 # Setup systemd service
 if [ -f "gas.service" ]; then
     echo "Setting up systemd service..."
