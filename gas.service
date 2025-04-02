@@ -9,7 +9,7 @@ WorkingDirectory=/home/ubuntu/fujinetGameAlerts
 Environment="PATH=/home/ubuntu/fujinetGameAlerts/venv/bin"
 EnvironmentFile=/home/ubuntu/fujinetGameAlerts/.env
 ExecStart=/bin/bash -c 'source /home/ubuntu/fujinetGameAlerts/venv/bin/activate && \
-    gunicorn --workers 3 --bind unix:gas.sock -m 007 gas:app'
+    gunicorn --workers 1 --bind unix:gas.sock -m 007 gas:app'
 Restart=always
 RestartSec=5
 
